@@ -333,6 +333,7 @@ body { background:var(--cream); font-family:DM Sans,sans-serif; color:var(--ink)
     </a>
     <div class="header-right">
       <button class="profiles-btn" onclick="gorselCacheTemizle()" style="color:#ff3b30;border-color:#ff3b30" title="Yanlış görselleri temizle">🗑️ Görselleri Sıfırla</button>
+      <button class="profiles-btn" onclick="dunyaPopupAc()" style="gap:6px;background:#E6F1FB;border-color:#378ADD;color:#185FA5">🌍 Haritam</button>
       <button class="profiles-btn" onclick="kutuphanAc()" style="gap:6px">📚 Kütüphanem</button>
       <button class="profiles-btn" onclick="openOnboard()">
         <span id="headerProfileLabel">👶 Profiller</span>
@@ -538,6 +539,63 @@ body { background:var(--cream); font-family:DM Sans,sans-serif; color:var(--ink)
     <div class="grid" id="grid"></div>
   </div>
 </main>
+
+<!-- SCRATCH CARD POPUP -->
+<div id="scratchPopup" style="position:fixed;inset:0;background:rgba(10,20,40,0.92);z-index:500;align-items:center;justify-content:center;padding:20px;display:none">
+  <div style="background:#fff;border-radius:24px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.4)">
+    <div id="scratchHeader" style="padding:18px 20px 14px;text-align:center;background:linear-gradient(135deg,#1a3a6e,#185FA5);color:#fff">
+      <div style="font-size:32px;margin-bottom:6px">⭐</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:3px" id="scratchKitapAd">Tebrikler!</div>
+      <div style="font-size:12px;opacity:0.85">Kazı ve dünya haritanda bir kıta aç!</div>
+    </div>
+    <div style="padding:16px">
+      <div style="font-size:12px;color:#378ADD;text-align:center;margin-bottom:8px" id="scratchIpucu">Parmağınla ya da mouse ile kazı!</div>
+      <div style="position:relative;border-radius:12px;overflow:hidden;touch-action:none">
+        <canvas id="scratchAlt" style="display:block;width:100%;border-radius:12px"></canvas>
+        <canvas id="scratchUst" style="position:absolute;top:0;left:0;width:100%;border-radius:12px;cursor:crosshair"></canvas>
+      </div>
+      <div style="margin-top:10px;height:6px;background:#f0ede8;border-radius:3px;overflow:hidden">
+        <div id="scratchBar" style="height:100%;background:linear-gradient(90deg,#378ADD,#185FA5);border-radius:3px;width:0%;transition:width 0.2s"></div>
+      </div>
+    </div>
+    <div id="scratchOdul" style="display:none;padding:16px 20px;background:#E6F1FB;border-top:1px solid #B5D4F4;text-align:center">
+      <div style="font-size:28px;margin-bottom:6px" id="scratchKitaEmoji">🌍</div>
+      <div style="font-size:15px;font-weight:700;color:#0C447C" id="scratchOdulBaslik">Harika!</div>
+      <div style="font-size:12px;color:#378ADD;margin-top:3px" id="scratchOdulAlt">Dünya haritanda açıldı!</div>
+      <button onclick="scratchKapat()" style="margin-top:12px;padding:9px 28px;background:#185FA5;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;font-family:DM Sans,sans-serif">Haritama Bak!</button>
+    </div>
+  </div>
+</div>
+
+<!-- DÜNYA HARİTASI POPUP -->
+<div id="dunyaPopup" style="position:fixed;inset:0;background:rgba(10,20,40,0.92);z-index:400;align-items:center;justify-content:center;padding:20px;display:none">
+  <div style="background:#0d1b2e;border-radius:24px;width:100%;max-width:560px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.5)">
+    <div style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a3a6e">
+      <div>
+        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:#fff">Dünya Haritam</div>
+        <div style="font-size:12px;color:#7ab8e8;margin-top:2px" id="dunyaAcikInfo">0/7 kıta keşfedildi</div>
+      </div>
+      <button onclick="dunyaKapat()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:16px;background:#0a1628">
+      <svg viewBox="0 0 900 460" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:12px">
+        <rect width="900" height="460" fill="#0d2444"/>
+        <line x1="0" y1="230" x2="900" y2="230" stroke="#1a3a6e" stroke-width="0.5"/>
+        <line x1="450" y1="0" x2="450" y2="460" stroke="#1a3a6e" stroke-width="0.5"/>
+        <ellipse cx="450" cy="230" rx="200" ry="180" fill="none" stroke="#1a3a6e" stroke-width="0.5"/>
+        <ellipse cx="450" cy="230" rx="390" ry="185" fill="none" stroke="#1a3a6e" stroke-width="0.5"/>
+        <g id="dk-kamerika"><path d="M 72 52 L 155 38 L 228 50 L 268 82 L 282 128 L 275 175 L 258 212 L 238 248 L 212 268 L 188 275 L 165 262 L 145 242 L 124 215 L 105 190 L 88 162 L 72 130 L 65 95 Z" fill="#444"/><text x="175" y="160" text-anchor="middle" font-size="11" fill="#888" font-family="sans-serif">Kuzey Amerika</text></g>
+        <g id="dk-gamerika"><path d="M 205 292 L 242 280 L 278 290 L 295 322 L 298 362 L 288 402 L 268 432 L 245 448 L 220 448 L 198 432 L 182 405 L 178 370 L 185 335 Z" fill="#444"/><text x="238" y="368" text-anchor="middle" font-size="11" fill="#888" font-family="sans-serif">Güney Amerika</text></g>
+        <g id="dk-avrupa"><path d="M 398 55 L 448 45 L 498 55 L 518 75 L 512 102 L 492 122 L 462 135 L 430 132 L 408 115 L 395 90 Z" fill="#444"/><text x="455" y="98" text-anchor="middle" font-size="11" fill="#888" font-family="sans-serif">Avrupa</text></g>
+        <g id="dk-afrika"><path d="M 405 150 L 448 138 L 492 148 L 515 175 L 522 212 L 516 252 L 498 290 L 472 325 L 445 348 L 420 352 L 395 335 L 375 305 L 362 268 L 358 228 L 365 188 L 382 162 Z" fill="#444"/><text x="440" y="255" text-anchor="middle" font-size="11" fill="#888" font-family="sans-serif">Afrika</text></g>
+        <g id="dk-asya"><path d="M 540 42 L 625 32 L 722 42 L 800 60 L 848 85 L 862 115 L 850 148 L 818 175 L 778 195 L 730 208 L 678 210 L 628 198 L 582 178 L 548 152 L 528 118 L 525 80 Z" fill="#444"/><text x="690" y="125" text-anchor="middle" font-size="12" fill="#888" font-family="sans-serif">Asya</text></g>
+        <g id="dk-avustralya"><path d="M 695 298 L 748 282 L 808 290 L 845 318 L 855 352 L 842 385 L 812 408 L 772 415 L 732 405 L 700 380 L 682 348 L 685 318 Z" fill="#444"/><text x="770" y="350" text-anchor="middle" font-size="11" fill="#888" font-family="sans-serif">Avustralya</text></g>
+        <g id="dk-antartika"><path d="M 130 440 L 300 428 L 480 424 L 660 428 L 820 436 L 860 448 L 860 460 L 130 460 Z" fill="#444"/><text x="490" y="448" text-anchor="middle" font-size="11" fill="#888" font-family="sans-serif">Antarktika</text></g>
+      </svg>
+    </div>
+    <div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid #1a3a6e" id="dunyaBadgeler"></div>
+  </div>
+</div>
 
 <!-- BAĞIŞ OVERLAY -->
 <div id="bagisOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;backdrop-filter:blur(4px);overflow-y:auto;padding:20px">
@@ -1426,11 +1484,17 @@ function yildizKoyModal(sayi) {
   if (!activeKitap) return;
   var link = activeKitap.link;
   if (!okumalar[link]) okumalar[link] = { okundu: false, yildiz: 0 };
+  var eskiYildiz = okumalar[link].yildiz;
   okumalar[link].yildiz = okumalar[link].yildiz === sayi ? 0 : sayi;
   if (sayi > 0) okumalar[link].okundu = true;
   saveState();
   gunceleModalOkuma();
   render();
+  // İlk kez yıldız veriliyorsa scratch card aç
+  var yeniYildiz = okumalar[link].yildiz;
+  if (yeniYildiz > 0 && eskiYildiz === 0 && siradakiKita()) {
+    setTimeout(() => scratchAc(activeKitap.ad), 300);
+  }
 }
 
 function gunceleModalOkuma() {
@@ -1868,6 +1932,215 @@ function gelisimTemizle() {
   document.getElementById('greetingDesc').textContent = 'Tüm kitaplar gösteriliyor';
   render();
 }
+
+
+// ── SCRATCH CARD + DÜNYA HARİTASI ──
+const SC_W = 340, SC_H = 200;
+let scCiziliyor = false, scSon = null, scOdulVerildi = false;
+let acikKitalar = JSON.parse(localStorage.getItem('acikKitalar') || '[]');
+
+const KITA_SIRA = ['kamerika','gamerika','avrupa','afrika','asya','avustralya','antartika'];
+const KITA_INFO = {
+  kamerika: { isim:'Kuzey Amerika', emoji:'🌎', renk:'#E8602C' },
+  gamerika: { isim:'Güney Amerika', emoji:'🌎', renk:'#d85030' },
+  avrupa:   { isim:'Avrupa',        emoji:'🌍', renk:'#3B6D11' },
+  afrika:   { isim:'Afrika',        emoji:'🌍', renk:'#BA7517' },
+  asya:     { isim:'Asya',          emoji:'🌏', renk:'#185FA5' },
+  avustralya:{ isim:'Avustralya',   emoji:'🌏', renk:'#7F77DD' },
+  antartika:{ isim:'Antarktika',    emoji:'❄️', renk:'#85B7EB' }
+};
+
+function dunyaHakSayisi() {
+  return Object.values(okumalar).filter(o => o.yildiz > 0).length;
+}
+
+function siradakiKita() {
+  return KITA_SIRA.find(k => !acikKitalar.includes(k)) || null;
+}
+
+function scratchAc(kitapAdi) {
+  const kita = siradakiKita();
+  if (!kita) return;
+  const info = KITA_INFO[kita];
+
+  scOdulVerildi = false;
+  document.getElementById('scratchKitapAd').textContent = kitapAdi || 'Tebrikler!';
+  document.getElementById('scratchIpucu').textContent = 'Kazı ve ' + info.isim + '\'ı keşfet!';
+  document.getElementById('scratchOdul').style.display = 'none';
+  document.getElementById('scratchBar').style.width = '0%';
+  document.getElementById('scratchKitaEmoji').textContent = info.emoji;
+  document.getElementById('scratchOdulBaslik').textContent = info.isim + ' keşfedildi!';
+  document.getElementById('scratchOdulAlt').textContent = 'Dünya haritanda ' + info.isim + ' açıldı!';
+
+  const popup = document.getElementById('scratchPopup');
+  popup.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  setTimeout(() => {
+    const altC = document.getElementById('scratchAlt');
+    const ustC = document.getElementById('scratchUst');
+    altC.width = SC_W; altC.height = SC_H;
+    ustC.width = SC_W; ustC.height = SC_H;
+    const ax = altC.getContext('2d');
+    const ux = ustC.getContext('2d');
+
+    // Alt canvas: kıta görseli
+    cizKitaSahnesi(ax, kita, info);
+
+    // Üst canvas: gri örtü
+    ux.fillStyle = '#6b7280';
+    ux.fillRect(0,0,SC_W,SC_H);
+    // Yıldız efekti
+    ux.fillStyle = 'rgba(255,255,255,0.08)';
+    for(let i=0;i<8;i++){
+      ux.beginPath();
+      ux.arc(Math.random()*SC_W, Math.random()*SC_H, 20+Math.random()*40, 0, Math.PI*2);
+      ux.fill();
+    }
+    ux.fillStyle = 'rgba(255,255,255,0.15)';
+    ux.font = 'bold 36px sans-serif';
+    ux.textAlign = 'center';
+    ux.fillText('?', SC_W/2, SC_H/2+12);
+    ux.font = '13px sans-serif';
+    ux.fillText('Kazı!', SC_W/2, SC_H/2+36);
+
+    function pos(e) {
+      const r = ustC.getBoundingClientRect();
+      const sx = SC_W/r.width, sy = SC_H/r.height;
+      const t = e.touches ? e.touches[0] : e;
+      return { x:(t.clientX-r.left)*sx, y:(t.clientY-r.top)*sy };
+    }
+    function kaz(x,y) {
+      ux.globalCompositeOperation='destination-out';
+      ux.beginPath(); ux.arc(x,y,28,0,Math.PI*2);
+      ux.fillStyle='rgba(0,0,0,1)'; ux.fill();
+      ux.globalCompositeOperation='source-over';
+      hesaplaYuzde(ux, kita);
+    }
+    function kazCizgi(x1,y1,x2,y2) {
+      ux.globalCompositeOperation='destination-out';
+      ux.beginPath(); ux.moveTo(x1,y1); ux.lineTo(x2,y2);
+      ux.lineWidth=56; ux.lineCap='round';
+      ux.strokeStyle='rgba(0,0,0,1)'; ux.stroke();
+      ux.globalCompositeOperation='source-over';
+      hesaplaYuzde(ux, kita);
+    }
+
+    ustC.onmousedown = e => { scCiziliyor=true; scSon=pos(e); kaz(scSon.x,scSon.y); };
+    ustC.onmousemove = e => { if(!scCiziliyor) return; const p=pos(e); kazCizgi(scSon.x,scSon.y,p.x,p.y); scSon=p; };
+    ustC.onmouseup = ustC.onmouseleave = () => scCiziliyor=false;
+    ustC.ontouchstart = e => { e.preventDefault(); scCiziliyor=true; scSon=pos(e); kaz(scSon.x,scSon.y); };
+    ustC.ontouchmove = e => { e.preventDefault(); if(!scCiziliyor) return; const p=pos(e); kazCizgi(scSon.x,scSon.y,p.x,p.y); scSon=p; };
+    ustC.ontouchend = () => scCiziliyor=false;
+  }, 80);
+}
+
+function cizKitaSahnesi(ax, kita, info) {
+  // Arka plan - okyanus
+  ax.fillStyle = '#0d2444'; ax.fillRect(0,0,SC_W,SC_H);
+  // Yıldızlar
+  ax.fillStyle = 'rgba(255,255,255,0.6)';
+  for(let i=0;i<20;i++){ax.beginPath();ax.arc(Math.random()*SC_W,Math.random()*60,1,0,Math.PI*2);ax.fill();}
+
+  // Kıtaya özel sahne
+  const renk = info.renk;
+  const koyu = renk;
+
+  // Büyük kıta şekli (basit ama güzel)
+  ax.fillStyle = renk;
+  if (kita === 'kamerika') {
+    ax.beginPath(); ax.ellipse(140,110,85,75,0.2,0,Math.PI*2); ax.fill();
+    ax.fillStyle='#27500A'; ax.beginPath(); ax.ellipse(155,80,40,30,-0.3,0,Math.PI*2); ax.fill();
+  } else if (kita === 'gamerika') {
+    ax.beginPath(); ax.ellipse(170,115,65,80,0.1,0,Math.PI*2); ax.fill();
+  } else if (kita === 'avrupa') {
+    ax.beginPath(); ax.ellipse(170,100,90,65,0,0,Math.PI*2); ax.fill();
+    ax.fillStyle='#27500A'; ax.beginPath(); ax.ellipse(200,85,35,22,0.4,0,Math.PI*2); ax.fill();
+  } else if (kita === 'afrika') {
+    ax.beginPath(); ax.ellipse(170,110,75,85,0,0,Math.PI*2); ax.fill();
+    ax.fillStyle='#633806'; ax.beginPath(); ax.ellipse(185,95,30,20,0.3,0,Math.PI*2); ax.fill();
+  } else if (kita === 'asya') {
+    ax.beginPath(); ax.ellipse(175,100,110,70,0,0,Math.PI*2); ax.fill();
+    ax.fillStyle='#0C447C'; ax.beginPath(); ax.ellipse(220,85,50,30,0.5,0,Math.PI*2); ax.fill();
+  } else if (kita === 'avustralya') {
+    ax.beginPath(); ax.ellipse(170,110,85,60,0,0,Math.PI*2); ax.fill();
+  } else if (kita === 'antartika') {
+    ax.fillStyle='#B5D4F4'; ax.beginPath(); ax.ellipse(170,140,140,50,0,0,Math.PI*2); ax.fill();
+    ax.fillStyle='#fff'; ax.beginPath(); ax.ellipse(170,130,120,40,0,0,Math.PI*2); ax.fill();
+  }
+
+  // Kıta ismi
+  ax.fillStyle='rgba(255,255,255,0.9)';
+  ax.font='bold 22px sans-serif';
+  ax.textAlign='center';
+  ax.fillText(info.emoji+' '+info.isim, SC_W/2, SC_H-18);
+
+  // Parlak sınır
+  ax.strokeStyle='rgba(255,255,255,0.3)'; ax.lineWidth=1;
+  ax.strokeRect(0,0,SC_W,SC_H);
+}
+
+function hesaplaYuzde(ctx, kita) {
+  const data = ctx.getImageData(0,0,SC_W,SC_H).data;
+  let seffaf=0;
+  for(let i=3;i<data.length;i+=4) if(data[i]<128) seffaf++;
+  const yuzde = Math.round((seffaf/(SC_W*SC_H))*100);
+  document.getElementById('scratchBar').style.width = yuzde+'%';
+  if(yuzde >= 65 && !scOdulVerildi) {
+    scOdulVerildi = true;
+    // Kıtayı aç
+    acikKitalar.push(kita);
+    localStorage.setItem('acikKitalar', JSON.stringify(acikKitalar));
+    // Haritayı güncelle
+    kitayiHaritadaAc(kita);
+    document.getElementById('scratchOdul').style.display = 'block';
+    document.getElementById('scratchIpucu').textContent = 'Harita güncellendi!';
+  }
+}
+
+function kitayiHaritadaAc(kita) {
+  const el = document.getElementById('dk-'+kita);
+  const info = KITA_INFO[kita];
+  if (!el) return;
+  const path = el.querySelector('path');
+  const text = el.querySelector('text');
+  if (path) { path.style.fill = info.renk; path.style.transition='fill 0.6s'; }
+  if (text) { text.style.fill = '#fff'; }
+  dunyaBadgeGuncelle();
+}
+
+function dunyaBadgeGuncelle() {
+  const el = document.getElementById('dunyaBadgeler');
+  if (!el) return;
+  el.innerHTML = KITA_SIRA.map(k => {
+    const info = KITA_INFO[k];
+    const acik = acikKitalar.includes(k);
+    return `<div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${acik?info.renk:'#1a3a6e'};color:${acik?'#fff':'#4a6a8a'}">${info.emoji} ${info.isim}</div>`;
+  }).join('');
+  const sayiEl = document.getElementById('dunyaAcikInfo');
+  if (sayiEl) sayiEl.textContent = acikKitalar.length + '/7 kıta keşfedildi';
+}
+
+function scratchKapat() {
+  document.getElementById('scratchPopup').style.display = 'none';
+  document.body.style.overflow = '';
+  // Haritayı göster
+  dunyaPopupAc();
+}
+
+function dunyaPopupAc() {
+  acikKitalar.forEach(k => kitayiHaritadaAc(k));
+  dunyaBadgeGuncelle();
+  const p = document.getElementById('dunyaPopup');
+  p.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function dunyaKapat() {
+  document.getElementById('dunyaPopup').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
 </script>
 </body>
 </html>
