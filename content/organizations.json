@@ -1,0 +1,34 @@
+[
+  {
+    "slug": "losev",
+    "name": "LÖSEV",
+    "description": "Lösemili Çocuklar Vakfı — hastanede ve evde tedavi gören çocuklara kitap ulaştırır.",
+    "website": "https://www.losev.org.tr",
+    "isActive": true,
+    "position": 1
+  },
+  {
+    "slug": "cocuk-vakfi",
+    "name": "Çocuk Vakfı",
+    "description": "Türkiye Çocuk Vakfı — okuma kültürü ve kütüphane projeleri yürütür.",
+    "website": "https://www.cocukvakfi.org.tr",
+    "isActive": true,
+    "position": 2
+  },
+  {
+    "slug": "darussafaka",
+    "name": "Darüşşafaka",
+    "description": "Babası veya annesi hayatta olmayan çocuklara eğitim desteği sağlar.",
+    "website": "https://www.darussafaka.org",
+    "isActive": true,
+    "position": 3
+  },
+  {
+    "slug": "acev",
+    "name": "AÇEV",
+    "description": "Anne Çocuk Eğitim Vakfı — erken çocukluk eğitimi programları yürütür.",
+    "website": "https://www.acev.org",
+    "isActive": true,
+    "position": 4
+  }
+]

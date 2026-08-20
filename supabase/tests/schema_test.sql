@@ -1,0 +1,392 @@
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Şema testleri
+--
+-- Boş bir veritabanında migration'lar çalıştıktan sonra çalıştırılır:
+--   npm run db:test
+--
+-- Her kontrol başarısız olursa exception fırlatır; sessizce geçen test yoktur.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+create or replace function pg_temp.assert(condition boolean, label text)
+returns void language plpgsql as $$
+begin
+  if condition is not true then
+    raise exception 'BAŞARISIZ: %', label;
+  end if;
+  raise notice '  ✓ %', label;
+end;
+$$;
+
+create or replace function pg_temp.assert_eq(actual anyelement, expected anyelement, label text)
+returns void language plpgsql as $$
+begin
+  if actual is distinct from expected then
+    raise exception 'BAŞARISIZ: % (beklenen: %, gelen: %)', label, expected, actual;
+  end if;
+  raise notice '  ✓ % = %', label, actual;
+end;
+$$;
+
+-- Belirli bir kullanıcı kimliğiyle "giriş yapmış" gibi davran.
+create or replace function pg_temp.login_as(target uuid)
+returns void language plpgsql as $$
+begin
+  -- is_local = false: psql her ifadeyi ayrı işlemde çalıştırdığı için
+  -- ayar oturum boyunca kalmalı.
+  perform set_config('request.jwt.claim.sub', coalesce(target::text, ''), false);
+end;
+$$;
+
+do $$ begin raise notice '── Kurulum ──'; end $$;
+
+-- ─── Sabit kimliklerle test verisi ─────────────────────────────────────────
+insert into auth.users (id, email) values
+  ('a0000000-0000-0000-0000-000000000001', 'ayse@ornek.com'),
+  ('a0000000-0000-0000-0000-000000000002', 'burak@ornek.com'),
+  ('a0000000-0000-0000-0000-000000000003', 'editor@ornek.com');
+
+insert into public.user_roles (user_id, role)
+values ('a0000000-0000-0000-0000-000000000003', 'editor');
+
+insert into public.development_areas (id, slug, name, emoji, color, position) values
+  ('d0000000-0000-0000-0000-000000000001', 'duygu', 'Duygu ve Davranış Rehberi', '❤️', '#E8602C', 1),
+  ('d0000000-0000-0000-0000-000000000002', 'sosyal', 'Sosyal İlişkiler Rehberi', '🤝', '#378ADD', 2);
+
+insert into public.development_topics (id, area_id, slug, name, keywords, position) values
+  ('70000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001',
+   'duygu-yonetimi', 'Duygu Yönetimi', array['duygu', 'öfke'], 1),
+  ('70000000-0000-0000-0000-000000000002', 'd0000000-0000-0000-0000-000000000002',
+   'paylasma', 'Paylaşma', array['paylaş'], 1);
+
+insert into public.interests (id, slug, name, emoji, position) values
+  ('60000000-0000-0000-0000-000000000001', 'hayvanlar', 'Hayvanlar', '🐾', 1);
+
+insert into public.people (id, slug, display_name) values
+  ('50000000-0000-0000-0000-000000000001', 'judith-kerr', 'Judith Kerr');
+
+insert into public.books (id, slug, title, summary, language, age_min, age_max, status, posted_at) values
+  ('b0000000-0000-0000-0000-000000000001', 'caya-gelen-kaplan', 'Çaya Gelen Kaplan',
+   'Sınırlar üzerine düşündüren zamansız bir klasik.', 'tr', 3, 8, 'published', '2026-04-14'),
+  ('b0000000-0000-0000-0000-000000000002', 'paylasmayi-ogreniyorum', 'Paylaşmayı Öğreniyorum',
+   'Kardeşiyle oyuncaklarını paylaşmayı öğrenen bir çocuk.', 'tr', 4, 7, 'published', '2026-03-01'),
+  ('b0000000-0000-0000-0000-000000000003', 'taslak-kitap', 'Taslak Kitap',
+   'Henüz yayınlanmadı.', 'tr', 5, 9, 'draft', null);
+
+insert into public.book_contributors (book_id, person_id, role)
+values ('b0000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', 'author');
+
+insert into public.book_topics (book_id, topic_id, relevance, source) values
+  ('b0000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000001', 5, 'editorial'),
+  ('b0000000-0000-0000-0000-000000000002', '70000000-0000-0000-0000-000000000002', 4, 'editorial');
+
+insert into public.achievements (id, slug, name, description, criteria, points) values
+  ('c0000000-0000-0000-0000-000000000001', 'ilk-kitap', 'İlk Kitap', 'İlk kitabını okudun.',
+   '{"type":"books_read","threshold":1}'::jsonb, 1),
+  ('c0000000-0000-0000-0000-000000000002', 'bes-kitap', 'Beş Kitap', 'Beş kitap okudun.',
+   '{"type":"books_read","threshold":5}'::jsonb, 3),
+  ('c0000000-0000-0000-0000-000000000003', 'uc-gun-seri', 'Üç Gün Üst Üste', 'Üç gün ara vermeden okudun.',
+   '{"type":"streak_days","threshold":3}'::jsonb, 2);
+
+insert into public.children (id, owner_id, name, birth_date, gender, position) values
+  ('e0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Elif', '2020-05-01', 'girl', 0),
+  ('e0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000002', 'Kaan', '2018-02-11', 'boy', 0);
+
+-- ═══ 1. Metin yardımcıları ═════════════════════════════════════════════════
+do $$ begin raise notice '── 1. slugify ──'; end $$;
+select pg_temp.assert_eq(public.slugify('Çaya Gelen Kaplan'), 'caya-gelen-kaplan', 'Türkçe karakterli slug');
+select pg_temp.assert_eq(public.slugify('İşte O!'), 'iste-o', 'büyük İ ve noktalama');
+select pg_temp.assert_eq(public.slugify('  Ağaç   Evi  '), 'agac-evi', 'boşluk temizliği');
+
+-- ═══ 2. Türkçe tam metin arama ═════════════════════════════════════════════
+do $$ begin raise notice '── 2. Arama ──'; end $$;
+select pg_temp.assert_eq(
+  (select count(*)::int from public.books
+   where search_vector @@ public.build_search_query('caya')),
+  1, 'aksansız arama ("caya" → "Çaya")');
+
+select pg_temp.assert_eq(
+  (select count(*)::int from public.books
+   where search_vector @@ public.build_search_query('kaplan')),
+  1, 'başlıkta arama');
+
+-- Türkçe ek almış kelimeler önek eşleştirmesiyle bulunmalı.
+select pg_temp.assert_eq(
+  (select count(*)::int from public.books
+   where search_vector @@ public.build_search_query('paylas')),
+  1, 'ek almış kelime ("paylaşmayı" → "paylas")');
+select pg_temp.assert_eq(
+  (select count(*)::int from public.books
+   where search_vector @@ public.build_search_query('kardesiyle')),
+  1, 'uzun ek ("kardeşiyle" → "kardeş" içeren kitap)');
+select pg_temp.assert(
+  public.build_search_query('   ') is null,
+  'boş sorgu null döner');
+select pg_temp.assert(
+  public.build_search_query('!!! & | ()') is null,
+  'operatör karakterleri temizlenir');
+
+select pg_temp.assert_eq(
+  (select count(*)::int from public.books
+   where search_vector @@ public.build_search_query('Judith')),
+  1, 'yazar adıyla arama (tetikleyici ile eklendi)');
+
+-- Yazar silinince arama vektöründen de düşmeli.
+delete from public.book_contributors
+where book_id = 'b0000000-0000-0000-0000-000000000001';
+select pg_temp.assert_eq(
+  (select count(*)::int from public.books
+   where search_vector @@ public.build_search_query('Judith')),
+  0, 'yazar silinince arama vektörü güncellenir');
+insert into public.book_contributors (book_id, person_id, role)
+values ('b0000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', 'author');
+
+-- ═══ 3. Kütüphane kısıtları ════════════════════════════════════════════════
+do $$ begin raise notice '── 3. Kısıtlar ──'; end $$;
+do $$
+begin
+  begin
+    insert into public.library_items (child_id, book_id, custom_book_id)
+    values ('e0000000-0000-0000-0000-000000000001',
+            'b0000000-0000-0000-0000-000000000001',
+            gen_random_uuid());
+    raise exception 'BAŞARISIZ: iki kaynak birden kabul edildi';
+  exception when check_violation or foreign_key_violation then
+    raise notice '  ✓ book_id ve custom_book_id birlikte reddedilir';
+  end;
+
+  begin
+    insert into public.library_items (child_id) values ('e0000000-0000-0000-0000-000000000001');
+    raise exception 'BAŞARISIZ: kaynaksız kayıt kabul edildi';
+  exception when check_violation then
+    raise notice '  ✓ kaynaksız kayıt reddedilir';
+  end;
+
+  begin
+    insert into public.library_items (child_id, book_id, rating)
+    values ('e0000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000001', 9);
+    raise exception 'BAŞARISIZ: 9 yıldız kabul edildi';
+  exception when check_violation then
+    raise notice '  ✓ 0-5 dışı puan reddedilir';
+  end;
+end $$;
+
+-- ═══ 4. Okuma oturumu tetikleyicisi ════════════════════════════════════════
+do $$ begin raise notice '── 4. Okuma oturumları ──'; end $$;
+insert into public.library_items (id, child_id, book_id, status, added_from)
+values ('f0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001',
+        'b0000000-0000-0000-0000-000000000001', 'to_read', 'catalog');
+
+select pg_temp.assert_eq(
+  (select times_read from public.library_items where id = 'f0000000-0000-0000-0000-000000000001'),
+  0, 'başlangıçta okuma sayısı');
+
+insert into public.reading_sessions (library_item_id, read_on) values
+  ('f0000000-0000-0000-0000-000000000001', current_date - 2),
+  ('f0000000-0000-0000-0000-000000000001', current_date - 1),
+  ('f0000000-0000-0000-0000-000000000001', current_date);
+
+select pg_temp.assert_eq(
+  (select times_read from public.library_items where id = 'f0000000-0000-0000-0000-000000000001'),
+  3, 'üç oturum sonrası okuma sayısı');
+select pg_temp.assert_eq(
+  (select status::text from public.library_items where id = 'f0000000-0000-0000-0000-000000000001'),
+  'read', 'ilk oturumda durum "read" olur');
+select pg_temp.assert_eq(
+  (select first_read_at from public.library_items where id = 'f0000000-0000-0000-0000-000000000001'),
+  current_date - 2, 'ilk okuma tarihi');
+select pg_temp.assert_eq(
+  (select last_read_at from public.library_items where id = 'f0000000-0000-0000-0000-000000000001'),
+  current_date, 'son okuma tarihi');
+
+delete from public.reading_sessions
+where library_item_id = 'f0000000-0000-0000-0000-000000000001' and read_on = current_date;
+select pg_temp.assert_eq(
+  (select times_read from public.library_items where id = 'f0000000-0000-0000-0000-000000000001'),
+  2, 'oturum silinince sayı düşer');
+
+-- "yarım bırakıldı" durumu tetikleyici tarafından ezilmemeli.
+update public.library_items set status = 'abandoned'
+where id = 'f0000000-0000-0000-0000-000000000001';
+insert into public.reading_sessions (library_item_id, read_on)
+values ('f0000000-0000-0000-0000-000000000001', current_date);
+select pg_temp.assert_eq(
+  (select status::text from public.library_items where id = 'f0000000-0000-0000-0000-000000000001'),
+  'abandoned', 'elle seçilen "abandoned" durumu korunur');
+
+-- ═══ 5. Seri ve başarımlar ═════════════════════════════════════════════════
+do $$ begin raise notice '── 5. Seri ve başarımlar ──'; end $$;
+select pg_temp.assert_eq(
+  public.child_reading_streak('e0000000-0000-0000-0000-000000000001'),
+  3, 'en uzun ardışık gün serisi');
+
+update public.library_items set rating = 5, status = 'read'
+where id = 'f0000000-0000-0000-0000-000000000001';
+
+select pg_temp.assert(
+  public.evaluate_child_achievements('e0000000-0000-0000-0000-000000000001') >= 2,
+  'başarımlar verildi (ilk kitap + üç gün seri)');
+select pg_temp.assert_eq(
+  (select count(*)::int from public.child_achievements
+   where child_id = 'e0000000-0000-0000-0000-000000000001'),
+  2, 'kazanılan başarım sayısı');
+select pg_temp.assert_eq(
+  (select count(*)::int from public.child_achievements
+   where child_id = 'e0000000-0000-0000-0000-000000000001'
+     and achievement_id = 'c0000000-0000-0000-0000-000000000002'),
+  0, '5 kitap başarımı henüz verilmedi');
+
+-- Tekrar çağırmak yeni başarım vermemeli.
+select pg_temp.assert_eq(
+  public.evaluate_child_achievements('e0000000-0000-0000-0000-000000000001'),
+  0, 'tekrar değerlendirmede yeni başarım yok');
+
+-- Puan: 1 puanlanmış kitap + (1 + 2) başarım puanı
+select pg_temp.assert_eq(
+  public.child_points('e0000000-0000-0000-0000-000000000001'),
+  4, 'toplam yıldız puanı');
+
+-- ═══ 6. Görünümler ═════════════════════════════════════════════════════════
+do $$ begin raise notice '── 6. Görünümler ──'; end $$;
+select pg_temp.assert_eq(
+  (select array_length(author_names, 1) from public.catalog_books
+   where slug = 'caya-gelen-kaplan'),
+  1, 'catalog_books yazar listesi');
+select pg_temp.assert_eq(
+  (select topic_slugs[1] from public.catalog_books where slug = 'caya-gelen-kaplan'),
+  'duygu-yonetimi', 'catalog_books konu listesi');
+select pg_temp.assert_eq(
+  (select jsonb_array_length(topics) from public.book_details where slug = 'caya-gelen-kaplan'),
+  1, 'book_details konu ayrıntıları');
+select pg_temp.assert_eq(
+  (select books_read::int from public.child_reading_stats
+   where child_id = 'e0000000-0000-0000-0000-000000000001'),
+  1, 'child_reading_stats okunan kitap');
+
+-- ═══ 7. RLS — veri yalıtımı ════════════════════════════════════════════════
+do $$ begin raise notice '── 7. RLS ──'; end $$;
+
+-- İzinler 0011_grants.sql'den gelmeli; burada elle GRANT YOK.
+-- (Eskiden buradaydılar ve gerçek bir izin eksikliğini gizliyorlardı.)
+select pg_temp.assert(
+  has_table_privilege('anon', 'public.books', 'select'),
+  'anon katalog tablosunu okuyabilir (GRANT var)');
+select pg_temp.assert(
+  has_table_privilege('anon', 'public.catalog_books', 'select'),
+  'anon katalog görünümünü okuyabilir');
+select pg_temp.assert(
+  not has_table_privilege('anon', 'public.children', 'select'),
+  'anon çocuk tablosuna hiç erişemez');
+select pg_temp.assert(
+  has_table_privilege('authenticated', 'public.library_items', 'insert'),
+  'üye kütüphane kaydı ekleyebilir (GRANT var)');
+select pg_temp.assert(
+  not has_table_privilege('anon', 'public.library_items', 'select'),
+  'anon kütüphane kayıtlarına erişemez');
+
+-- Ayşe: kendi çocuğunu görür, Burak'ınkini görmez.
+set role authenticated;
+select pg_temp.login_as('a0000000-0000-0000-0000-000000000001');
+select pg_temp.assert_eq((select count(*)::int from public.children), 1, 'Ayşe yalnızca kendi çocuğunu görür');
+select pg_temp.assert_eq((select count(*)::int from public.library_items), 1, 'Ayşe yalnızca kendi kayıtlarını görür');
+select pg_temp.assert_eq((select count(*)::int from public.reading_sessions), 3, 'Ayşe kendi oturumlarını görür');
+
+select pg_temp.login_as('a0000000-0000-0000-0000-000000000002');
+select pg_temp.assert_eq((select count(*)::int from public.children), 1, 'Burak yalnızca kendi çocuğunu görür');
+select pg_temp.assert_eq((select count(*)::int from public.library_items), 0, 'Burak Ayşe''nin kayıtlarını göremez');
+select pg_temp.assert_eq((select count(*)::int from public.reading_sessions), 0, 'Burak Ayşe''nin oturumlarını göremez');
+
+-- Burak, Ayşe'nin çocuğuna kayıt ekleyemez.
+do $$
+begin
+  begin
+    insert into public.library_items (child_id, book_id)
+    values ('e0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002');
+    raise exception 'BAŞARISIZ: başkasının çocuğuna kayıt eklendi';
+  exception when insufficient_privilege then
+    raise notice '  ✓ başkasının çocuğuna yazma engellendi';
+  end;
+end $$;
+
+-- Anonim ziyaretçi: yayındaki kitapları görür, taslakları görmez.
+reset role;
+set role anon;
+select pg_temp.login_as(null);
+select pg_temp.assert_eq((select count(*)::int from public.books), 2, 'anonim yalnızca yayındaki kitapları görür');
+select pg_temp.assert_eq((select count(*)::int from public.development_areas), 2, 'anonim rehberleri görür');
+-- Takas ilanları ve çocuk profilleri anonime hiç açılmıyor: RLS'ten önce
+-- GRANT düzeyinde engelleniyor, yani sorgu satır döndürmüyor değil, hata veriyor.
+do $$
+begin
+  begin
+    perform 1 from public.exchange_listings;
+    raise exception 'BAŞARISIZ: anonim takas ilanlarını okuyabildi';
+  exception when insufficient_privilege then
+    raise notice '  ✓ anonim takas ilanlarına erişemez';
+  end;
+
+  begin
+    perform 1 from public.children;
+    raise exception 'BAŞARISIZ: anonim çocuk profillerini okuyabildi';
+  exception when insufficient_privilege then
+    raise notice '  ✓ anonim çocuk profillerine erişemez';
+  end;
+end $$;
+
+-- Editör: taslakları da görür ve kitap yazabilir.
+reset role;
+set role authenticated;
+select pg_temp.login_as('a0000000-0000-0000-0000-000000000003');
+select pg_temp.assert_eq((select count(*)::int from public.books), 3, 'editör taslakları da görür');
+insert into public.books (slug, title, summary, language, status)
+values ('editor-kitabi', 'Editör Kitabı', 'Editör tarafından eklendi.', 'tr', 'published');
+select pg_temp.assert_eq(
+  (select count(*)::int from public.books where slug = 'editor-kitabi'),
+  1, 'editör kitap ekleyebilir');
+
+-- Normal üye kitap yazamaz.
+select pg_temp.login_as('a0000000-0000-0000-0000-000000000001');
+do $$
+begin
+  begin
+    insert into public.books (slug, title, summary, language)
+    values ('uye-kitabi', 'Üye Kitabı', 'Olmamalı.', 'tr');
+    raise exception 'BAŞARISIZ: normal üye kitap ekledi';
+  exception when insufficient_privilege then
+    raise notice '  ✓ normal üye katalog yazamaz';
+  end;
+end $$;
+
+reset role;
+select pg_temp.login_as(null);
+
+-- ═══ 8. Kullanıcı silme zinciri ════════════════════════════════════════════
+-- Kullanıcı silinince tüm bağlı veri temizlenmeli. Bu, `supabase_auth_admin`
+-- gibi public şemada izni olmayan bir rol tarafından da yapılabilmeli;
+-- tetikleyiciler bu yüzden `security definer` (bkz. 0012).
+do $$ begin raise notice '── 8. Kullanıcı silme ──'; end $$;
+
+select pg_temp.assert(
+  (select prosecdef from pg_proc where proname = 'sync_library_item_reading_stats'),
+  'okuma istatistiği tetikleyicisi security definer');
+select pg_temp.assert(
+  (select prosecdef from pg_proc where proname = 'refresh_book_search_vector'),
+  'arama vektörü tetikleyicisi security definer');
+
+delete from auth.users where id = 'a0000000-0000-0000-0000-000000000001';
+
+select pg_temp.assert_eq(
+  (select count(*)::int from public.children where owner_id = 'a0000000-0000-0000-0000-000000000001'),
+  0, 'çocuk profilleri silindi');
+select pg_temp.assert_eq(
+  (select count(*)::int from public.library_items), 0, 'kütüphane kayıtları silindi');
+select pg_temp.assert_eq(
+  (select count(*)::int from public.reading_sessions), 0, 'okuma oturumları silindi');
+select pg_temp.assert_eq(
+  (select count(*)::int from public.reading_notes), 0, 'notlar silindi');
+select pg_temp.assert_eq(
+  (select count(*)::int from public.profiles where id = 'a0000000-0000-0000-0000-000000000001'),
+  0, 'profil silindi');
+select pg_temp.assert(
+  (select count(*) from public.books) > 0, 'katalog silinmedi');
+
+do $$ begin raise notice ''; raise notice 'TÜM ŞEMA TESTLERİ GEÇTİ'; end $$;

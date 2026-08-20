@@ -1,0 +1,39 @@
+# dependencies
+node_modules
+.pnp
+.pnp.*
+
+# next.js
+.next
+out
+next-env.d.ts
+
+# production
+build
+dist
+
+# testing
+coverage
+
+# env
+.env
+.env.local
+.env*.local
+
+# playwright mcp çıktıları
+.playwright-mcp
+
+# supabase cli
+supabase/.temp
+supabase/.branches
+
+# misc
+.DS_Store
+*.pem
+.vercel
+*.tsbuildinfo
+
+# editor
+.idea
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,366 @@
+{
+  "developmentAreas": [
+    {
+      "slug": "degisim",
+      "name": "Değişim Rehberi",
+      "description": "Hayatındaki büyük değişikliklere hazırlanan çocuklar için.",
+      "emoji": "🌱",
+      "color": "#3B6D11",
+      "position": 1,
+      "topics": [
+        {
+          "slug": "kardes-iliskileri",
+          "name": "Kardeş İlişkileri",
+          "label": null,
+          "keywords": ["kardeş", "bebek", "kıskançl", "ağabey", "abla"],
+          "position": 1
+        },
+        {
+          "slug": "okul-adaptasyonu",
+          "name": "Okul Adaptasyonu",
+          "label": null,
+          "keywords": ["okul", "sınıf", "öğretmen", "okula başl", "ilk gün"],
+          "position": 2
+        },
+        {
+          "slug": "tasinma-sureci",
+          "name": "Taşınma Süreci",
+          "label": null,
+          "keywords": ["taşın", "yeni ev", "yeni şehir", "veda"],
+          "position": 3
+        }
+      ]
+    },
+    {
+      "slug": "zor-konular",
+      "name": "Zor Konular Rehberi",
+      "description": "Konuşması güç konuları birlikte açmak için.",
+      "emoji": "💬",
+      "color": "#7F77DD",
+      "position": 2,
+      "topics": [
+        {
+          "slug": "cinsel-gelisim",
+          "name": "Cinsel Gelişim",
+          "label": null,
+          "keywords": ["cinsel", "vücut", "doğum", "mahremiyet"],
+          "position": 1
+        },
+        {
+          "slug": "olum-ve-yas",
+          "name": "Ölüm ve Yas",
+          "label": null,
+          "keywords": ["ölüm", "öldü", "kaybett", "vefat", "\\byas\\b", "cenaze"],
+          "position": 2
+        },
+        {
+          "slug": "farkliliklar",
+          "name": "Farklılıklar",
+          "label": null,
+          "keywords": ["farklı", "engel", "özel", "renk", "kültür", "çeşitlilik"],
+          "position": 3
+        },
+        {
+          "slug": "para-kavrami",
+          "name": "Para Kavramı",
+          "label": null,
+          "keywords": ["para", "alışveriş", "market", "harçlık", "birikim"],
+          "position": 4
+        }
+      ]
+    },
+    {
+      "slug": "duygu",
+      "name": "Duygu ve Davranış Rehberi",
+      "description": "Duyguları tanımak, adlandırmak ve yönetmek.",
+      "emoji": "❤️",
+      "color": "#E8602C",
+      "position": 3,
+      "topics": [
+        {
+          "slug": "duygu-yonetimi",
+          "name": "Duygu Yönetimi",
+          "label": null,
+          "keywords": ["duygu", "hissed", "his ", "öfke", "sinir", "ağla", "üzgün", "mutlu"],
+          "position": 1
+        },
+        {
+          "slug": "korku-ve-kaygi",
+          "name": "Korku ve Kaygı",
+          "label": null,
+          "keywords": ["korku", "kaygı", "endişe", "tedirgin", "karanlık", "canavar"],
+          "position": 2
+        },
+        {
+          "slug": "yemek-seciciligi",
+          "name": "Yemek Seçiciliği",
+          "label": null,
+          "keywords": ["yemek", "yiyor", "beslen", "sebze", "meyve", "iştah"],
+          "position": 3
+        },
+        {
+          "slug": "ozguven-gelisimi",
+          "name": "Özgüven Gelişimi",
+          "label": null,
+          "keywords": ["özgüven", "cesaret", "güven", "ben yapab", "kendine inan"],
+          "position": 4
+        }
+      ]
+    },
+    {
+      "slug": "sosyal",
+      "name": "Sosyal İlişkiler Rehberi",
+      "description": "Arkadaşlık, paylaşma ve sınırlar.",
+      "emoji": "🤝",
+      "color": "#378ADD",
+      "position": 4,
+      "topics": [
+        {
+          "slug": "arkadaslik-becerileri",
+          "name": "Arkadaşlık Becerileri",
+          "label": null,
+          "keywords": ["arkadaş", "dostluk", "birlikte", "beraber", "takım"],
+          "position": 1
+        },
+        {
+          "slug": "akran-zorbaligi",
+          "name": "Akran Zorbalığı",
+          "label": null,
+          "keywords": ["zorbal", "bully", "zulüm", "kötü davranış"],
+          "position": 2
+        },
+        {
+          "slug": "sosyal-sinirlar",
+          "name": "Sosyal Sınırlar",
+          "label": null,
+          "keywords": ["sınır", "hayır de", "istemiyorum", "kural"],
+          "position": 3
+        },
+        {
+          "slug": "paylasma",
+          "name": "Paylaşma",
+          "label": null,
+          "keywords": ["paylaş", "bölüş", "sırayla"],
+          "position": 4
+        }
+      ]
+    },
+    {
+      "slug": "ozel-ilgi",
+      "name": "Özel İlgi Rehberi",
+      "description": "Meraklı ve derinleşmek isteyen çocuklar için.",
+      "emoji": "⭐",
+      "color": "#185FA5",
+      "position": 5,
+      "topics": [
+        {
+          "slug": "ustun-yetenek",
+          "name": "Üstün Yetenek",
+          "label": "Üstün Yetenek / Dehalar",
+          "keywords": ["deha", "yetenek", "üstün", "zeka"],
+          "position": 1
+        },
+        {
+          "slug": "brans-kitaplari",
+          "name": "Branş Kitapları",
+          "label": null,
+          "keywords": ["bilim", "uzay", "hayvan", "doğa", "tarih", "coğrafya", "sanat"],
+          "position": 2
+        },
+        {
+          "slug": "tematik-icerikler",
+          "name": "Tematik İçerikler",
+          "label": null,
+          "keywords": ["tema", "seri", "koleksiyon"],
+          "position": 3
+        }
+      ]
+    },
+    {
+      "slug": "eglence",
+      "name": "Eğlence Rehberi",
+      "description": "Kahkaha, macera ve sürpriz.",
+      "emoji": "🎉",
+      "color": "#D4537E",
+      "position": 6,
+      "topics": [
+        {
+          "slug": "interaktif-kitaplar",
+          "name": "İnteraktif Kitaplar",
+          "label": null,
+          "keywords": ["interaktif", "dokun", "bul", "sakla", "katıl"],
+          "position": 1
+        },
+        {
+          "slug": "macera-hikayeleri",
+          "name": "Macera Hikayeleri",
+          "label": null,
+          "keywords": ["macera", "kahraman", "sihir", "büyü", "yolculuk", "ejderha"],
+          "position": 2
+        }
+      ]
+    },
+    {
+      "slug": "okul",
+      "name": "Okul Rehberi",
+      "description": "Okul becerilerini destekleyen kitaplar.",
+      "emoji": "📚",
+      "color": "#BA7517",
+      "position": 7,
+      "topics": [
+        {
+          "slug": "matematik-becerileri",
+          "name": "Matematik Becerileri",
+          "label": null,
+          "keywords": ["sayı", "matematik", "hesap", "geometri", "rakam"],
+          "position": 1
+        },
+        {
+          "slug": "dil-ve-okuryazarlik",
+          "name": "Dil ve Okuryazarlık",
+          "label": null,
+          "keywords": ["harf", "alfabe", "okuma", "yazma", "kelime", "okuryazar"],
+          "position": 2
+        },
+        {
+          "slug": "mantik-ve-dikkat",
+          "name": "Mantık ve Dikkat",
+          "label": null,
+          "keywords": ["mantık", "dikkat", "hafıza", "bulmaca", "strateji"],
+          "position": 3
+        },
+        {
+          "slug": "ritmik-okumalar",
+          "name": "Ritmik Okumalar",
+          "label": null,
+          "keywords": ["tekerleme", "ritim", "uyak", "şiir", "kafiye", "şarkı"],
+          "position": 4
+        }
+      ]
+    },
+    {
+      "slug": "etkinlik",
+      "name": "Etkinlik Rehberi",
+      "description": "Okumaktan çıkıp yapmaya geçirenler.",
+      "emoji": "🎨",
+      "color": "#0F9B8E",
+      "position": 8,
+      "topics": [
+        {
+          "slug": "sanat-ve-yaraticilik",
+          "name": "Sanat ve Yaratıcılık",
+          "label": null,
+          "keywords": ["sanat", "resim", "boya", "çiz", "yaratıcı"],
+          "position": 1
+        },
+        {
+          "slug": "doga-ve-gozlem",
+          "name": "Doğa ve Gözlem",
+          "label": null,
+          "keywords": ["doğa", "orman", "bahçe", "gözlem", "mevsim", "ağaç"],
+          "position": 2
+        },
+        {
+          "slug": "muzik-ve-ritim",
+          "name": "Müzik ve Ritim",
+          "label": null,
+          "keywords": ["müzik", "şarkı", "ritim", "dans", "enstrüman"],
+          "position": 3
+        },
+        {
+          "slug": "oyun-ve-hareket",
+          "name": "Oyun ve Hareket",
+          "label": null,
+          "keywords": ["oyun", "hareket", "spor", "koş", "zıpla"],
+          "position": 4
+        }
+      ]
+    }
+  ],
+  "interests": [
+    {
+      "slug": "hayvanlar",
+      "name": "Hayvanlar",
+      "emoji": "🐾",
+      "keywords": ["hayvan", "kedi", "köpek", "kuş", "ayı", "tavşan", "fil"],
+      "position": 1
+    },
+    {
+      "slug": "uzay",
+      "name": "Uzay",
+      "emoji": "🚀",
+      "keywords": ["uzay", "gezegen", "yıldız", "astronot", "\\bay\\b", "roket"],
+      "position": 2
+    },
+    {
+      "slug": "doga",
+      "name": "Doğa",
+      "emoji": "🌿",
+      "keywords": ["doğa", "orman", "ağaç", "çiçek", "deniz", "mevsim"],
+      "position": 3
+    },
+    {
+      "slug": "muzik",
+      "name": "Müzik",
+      "emoji": "🎵",
+      "keywords": ["müzik", "şarkı", "dans", "ritim", "enstrüman"],
+      "position": 4
+    },
+    {
+      "slug": "spor",
+      "name": "Spor",
+      "emoji": "⚽",
+      "keywords": ["spor", "futbol", "koş", "yüz", "oyun sahası"],
+      "position": 5
+    },
+    {
+      "slug": "sanat",
+      "name": "Sanat",
+      "emoji": "🎨",
+      "keywords": ["sanat", "resim", "boya", "çiz", "renk"],
+      "position": 6
+    },
+    {
+      "slug": "matematik",
+      "name": "Matematik",
+      "emoji": "🔢",
+      "keywords": ["matematik", "sayı", "hesap", "rakam", "geometri"],
+      "position": 7
+    },
+    {
+      "slug": "bilim",
+      "name": "Bilim",
+      "emoji": "🔬",
+      "keywords": ["bilim", "deney", "keşif", "icat", "makine"],
+      "position": 8
+    },
+    {
+      "slug": "macera",
+      "name": "Macera",
+      "emoji": "🗺️",
+      "keywords": ["macera", "yolculuk", "harita", "keşif", "kahraman"],
+      "position": 9
+    },
+    {
+      "slug": "peri-masallari",
+      "name": "Peri Masalları",
+      "emoji": "🧚",
+      "keywords": ["peri", "masal", "prenses", "ejderha", "büyü"],
+      "position": 10
+    },
+    {
+      "slug": "dinozorlar",
+      "name": "Dinozorlar",
+      "emoji": "🦕",
+      "keywords": ["dinozor", "tarih öncesi", "fosil"],
+      "position": 11
+    },
+    {
+      "slug": "araclar",
+      "name": "Araçlar",
+      "emoji": "🚗",
+      "keywords": ["araba", "kamyon", "tren", "uçak", "gemi", "araç"],
+      "position": 12
+    }
+  ]
+}

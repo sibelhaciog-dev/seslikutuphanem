@@ -1,0 +1,7 @@
+.next
+node_modules
+legacy
+src/data/books.json
+package-lock.json
+supabase/.temp
+content/books.json
