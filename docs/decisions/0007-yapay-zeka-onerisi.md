@@ -76,3 +76,7 @@ kalırdı ve uydurma kapısı açılırdı. Kazanç, bu bedeli karşılamıyor.
 - Yeni bir kota kalemi (`recommendation`) ve yeni bir uç (`POST /api/oneri`).
 - Çocuk profili **zorunlu değil**: profil yoksa yalnızca mod ve serbest
   metinle çalışır, arayüz profille daha iyi sonuç vereceğini söyler.
+- Modlar ve eğilimleri **veritabanında** (`discovery_modes`, 0020), kodda
+  değil. Yeni bir mod eklemek ya da bir ağırlığı değiştirmek yayın
+  gerektirmiyor; yönetim arayüzünden yapılabiliyor. Yazım kaynağı yine
+  `content/discovery-modes.json` — kitaplarda olduğu gibi (ADR 0002).

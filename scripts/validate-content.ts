@@ -23,8 +23,8 @@ try {
   throw error
 }
 
-const { taxonomy, books, achievements, organizations } = content
-const issues = checkContentConsistency(books, taxonomy)
+const { taxonomy, books, achievements, organizations, discoveryModes } = content
+const issues = checkContentConsistency(books, taxonomy, discoveryModes)
 const errors = issues.filter((issue) => issue.level === 'error')
 const warnings = issues.filter((issue) => issue.level === 'warning')
 
@@ -55,6 +55,7 @@ console.log(`   Gelişim alanı:    ${taxonomy.developmentAreas.length} (${topic
 console.log(`   İlgi alanı:       ${taxonomy.interests.length}`)
 console.log(`   Başarım:          ${achievements.length}`)
 console.log(`   Bağış kurumu:     ${organizations.length}`)
+console.log(`   Keşif modu:       ${discoveryModes.length}`)
 console.log(
   `   Türkçe / İngilizce: ${books.filter((b) => b.language === 'tr').length} / ${books.filter((b) => b.language === 'en').length}`,
 )

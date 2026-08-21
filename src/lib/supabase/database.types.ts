@@ -638,6 +638,114 @@ export interface Database {
           },
         ]
       }
+      discovery_mode_interests: {
+        Row: {
+          mode_id: string
+          interest_id: string
+          weight: number
+        }
+        Insert: {
+          mode_id: string
+          interest_id: string
+          weight?: number
+        }
+        Update: {
+          mode_id?: string
+          interest_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'discovery_mode_interests_interest_id_fkey'
+            columns: ['interest_id']
+            isOneToOne: false
+            referencedRelation: 'interests'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'discovery_mode_interests_mode_id_fkey'
+            columns: ['mode_id']
+            isOneToOne: false
+            referencedRelation: 'discovery_modes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      discovery_mode_topics: {
+        Row: {
+          mode_id: string
+          topic_id: string
+          weight: number
+        }
+        Insert: {
+          mode_id: string
+          topic_id: string
+          weight?: number
+        }
+        Update: {
+          mode_id?: string
+          topic_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'discovery_mode_topics_mode_id_fkey'
+            columns: ['mode_id']
+            isOneToOne: false
+            referencedRelation: 'discovery_modes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'discovery_mode_topics_topic_id_fkey'
+            columns: ['topic_id']
+            isOneToOne: false
+            referencedRelation: 'development_topics'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      discovery_modes: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          emoji: string | null
+          description: string | null
+          prompt_hint: string | null
+          language: 'tr' | 'en' | null
+          position: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          emoji?: string | null
+          description?: string | null
+          prompt_hint?: string | null
+          language?: 'tr' | 'en' | null
+          position?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          name?: string
+          emoji?: string | null
+          description?: string | null
+          prompt_hint?: string | null
+          language?: 'tr' | 'en' | null
+          position?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       donation_organizations: {
         Row: {
           id: string
@@ -1297,6 +1405,22 @@ export interface Database {
           average_rating: number | null
           total_sessions: number | null
           last_read_at: string | null
+        }
+        Relationships: []
+      }
+      discovery_mode_details: {
+        Row: {
+          id: string | null
+          slug: string | null
+          name: string | null
+          emoji: string | null
+          description: string | null
+          prompt_hint: string | null
+          language: 'tr' | 'en' | null
+          position: number | null
+          is_active: boolean | null
+          topics: Json | null
+          interests: Json | null
         }
         Relationships: []
       }

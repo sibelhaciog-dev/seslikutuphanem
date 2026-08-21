@@ -711,4 +711,71 @@ select pg_temp.assert(
 delete from auth.users where id in ('a0000000-0000-0000-0000-0000000000c1',
                                     'a0000000-0000-0000-0000-0000000000c2');
 
+-- ═══ 15. Keşif modları (0020) ═════════════════════════════════════════════
+-- Taksonomiyle aynı desen: herkes okur, yalnızca ekip yazar.
+-- Pasif modlar ziyaretçiye görünmemeli.
+do $$ begin raise notice '── 15. Keşif modları ──'; end $$;
+
+reset role;
+insert into public.discovery_modes (slug, name, emoji, position, is_active)
+values ('test-aktif', 'Aktif Mod', '🙂', 1, true),
+       ('test-pasif', 'Pasif Mod', '🙃', 2, false);
+
+insert into public.discovery_mode_topics (mode_id, topic_id, weight)
+select m.id, t.id, 5
+from public.discovery_modes m, public.development_topics t
+where m.slug = 'test-aktif' and t.slug = 'duygu-yonetimi';
+
+-- Anonim: yalnızca aktif modu görür.
+set role anon;
+select pg_temp.login_as(null);
+select pg_temp.assert_eq(
+  (select count(*)::int from public.discovery_modes where slug like 'test-%'),
+  1, 'anonim yalnızca aktif modu görüyor');
+
+-- Görünüm eğilimleri getiriyor mu?
+select pg_temp.assert_eq(
+  (select jsonb_array_length(topics) from public.discovery_mode_details
+   where slug = 'test-aktif'),
+  1, 'görünüm mod eğilimlerini getiriyor');
+
+select pg_temp.assert(
+  (select topics -> 0 ->> 'slug' from public.discovery_mode_details
+   where slug = 'test-aktif') = 'duygu-yonetimi',
+  'görünümdeki konu slug''ı doğru');
+
+-- Normal üye mod ekleyememeli.
+set role authenticated;
+select pg_temp.login_as('a0000000-0000-0000-0000-000000000001');
+do $$
+begin
+  insert into public.discovery_modes (slug, name, position)
+  values ('uye-modu', 'Üye Modu', 9);
+  raise exception 'BAŞARISIZ: üye keşif modu ekledi';
+exception
+  when insufficient_privilege then
+    raise notice '  ✓ üye keşif modu ekleyemiyor';
+end $$;
+
+-- Editör görebilmeli ve ekleyebilmeli.
+select pg_temp.login_as('a0000000-0000-0000-0000-000000000003');
+select pg_temp.assert_eq(
+  (select count(*)::int from public.discovery_modes where slug like 'test-%'),
+  2, 'editör pasif modu da görüyor');
+
+insert into public.discovery_modes (slug, name, position)
+values ('editor-modu', 'Editör Modu', 9);
+select pg_temp.assert_eq(
+  (select count(*)::int from public.discovery_modes where slug = 'editor-modu'),
+  1, 'editör mod ekleyebiliyor');
+
+-- Mod silinince eğilimleri de gitmeli (cascade).
+reset role;
+delete from public.discovery_modes where slug = 'test-aktif';
+select pg_temp.assert_eq(
+  (select count(*)::int from public.discovery_mode_topics), 0,
+  'mod silinince eğilimleri de siliniyor');
+
+delete from public.discovery_modes where slug in ('test-pasif', 'editor-modu');
+
 do $$ begin raise notice ''; raise notice 'TÜM ŞEMA TESTLERİ GEÇTİ'; end $$;

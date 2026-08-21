@@ -1,0 +1,91 @@
+[
+  {
+    "slug": "sakin",
+    "name": "Sakinleşelim",
+    "emoji": "😴",
+    "description": "Uyku öncesi ya da yoğun bir günün sonu için",
+    "promptHint": "Ebeveyn sakinleştirici, yumuşak tempolu bir kitap arıyor. Uyku öncesi okunmaya uygun, heyecanı düşük kitapları öne çıkar.",
+    "position": 1,
+    "topics": [
+      { "slug": "duygu-yonetimi", "weight": 5 },
+      { "slug": "korku-ve-kaygi", "weight": 4 }
+    ],
+    "interests": []
+  },
+  {
+    "slug": "duygu",
+    "name": "Duyguları konuşalım",
+    "emoji": "💛",
+    "description": "Bir duyguyu anlamak ve adlandırmak için",
+    "promptHint": "Ebeveyn çocuğuyla bir duyguyu konuşmak istiyor. Duyguyu adlandırmayı ve ifade etmeyi kolaylaştıran kitapları öne çıkar.",
+    "position": 2,
+    "topics": [
+      { "slug": "duygu-yonetimi", "weight": 5 },
+      { "slug": "ozguven-gelisimi", "weight": 4 },
+      { "slug": "farkliliklar", "weight": 3 }
+    ],
+    "interests": []
+  },
+  {
+    "slug": "eglence",
+    "name": "Gülelim",
+    "emoji": "😄",
+    "description": "Kahkaha ve keyifli bir okuma için",
+    "promptHint": "Ebeveyn eğlenceli, güldüren bir kitap arıyor. Mizah, sürpriz ve etkileşim içeren kitapları öne çıkar.",
+    "position": 3,
+    "topics": [
+      { "slug": "interaktif-kitaplar", "weight": 5 },
+      { "slug": "macera-hikayeleri", "weight": 4 }
+    ],
+    "interests": []
+  },
+  {
+    "slug": "merak",
+    "name": "Merak edelim",
+    "emoji": "🔍",
+    "description": "Öğrenmek, keşfetmek, soru sormak için",
+    "promptHint": "Ebeveyn çocuğunun merakını besleyecek bir kitap arıyor. Bilgi veren, gözlem ve düşünmeyi teşvik eden kitapları öne çıkar.",
+    "position": 4,
+    "topics": [
+      { "slug": "brans-kitaplari", "weight": 5 },
+      { "slug": "doga-ve-gozlem", "weight": 4 },
+      { "slug": "mantik-ve-dikkat", "weight": 4 }
+    ],
+    "interests": [
+      { "slug": "bilim", "weight": 3 },
+      { "slug": "doga", "weight": 3 },
+      { "slug": "uzay", "weight": 3 }
+    ]
+  },
+  {
+    "slug": "hazirlik",
+    "name": "Yeni bir duruma hazırlanalım",
+    "emoji": "🌱",
+    "description": "Kardeş, okul, taşınma gibi değişimler için",
+    "promptHint": "Ailede bir değişim var ve ebeveyn çocuğunu buna hazırlamak istiyor. Değişimi anlatan ve normalleştiren kitapları öne çıkar.",
+    "position": 5,
+    "topics": [
+      { "slug": "kardes-iliskileri", "weight": 5 },
+      { "slug": "okul-adaptasyonu", "weight": 5 },
+      { "slug": "tasinma-sureci", "weight": 5 }
+    ],
+    "interests": []
+  },
+  {
+    "slug": "birlikte",
+    "name": "Birlikte yapalım",
+    "emoji": "🎨",
+    "description": "Okumanın ötesine geçen, etkinliğe dönüşen kitaplar",
+    "promptHint": "Ebeveyn çocuğuyla birlikte bir şey yapmak istiyor. Okuduktan sonra etkinliğe dönüşebilecek kitapları öne çıkar.",
+    "position": 6,
+    "topics": [
+      { "slug": "sanat-ve-yaraticilik", "weight": 5 },
+      { "slug": "oyun-ve-hareket", "weight": 4 },
+      { "slug": "muzik-ve-ritim", "weight": 4 }
+    ],
+    "interests": [
+      { "slug": "sanat", "weight": 3 },
+      { "slug": "muzik", "weight": 3 }
+    ]
+  }
+]

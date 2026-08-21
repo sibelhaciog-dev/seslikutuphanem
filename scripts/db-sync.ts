@@ -63,9 +63,9 @@ function slugify(value: string): string {
 }
 
 async function main() {
-  const { taxonomy, books, achievements, organizations } = loadAllContent()
+  const { taxonomy, books, achievements, organizations, discoveryModes } = loadAllContent()
 
-  const blocking = checkContentConsistency(books, taxonomy).filter(
+  const blocking = checkContentConsistency(books, taxonomy, discoveryModes).filter(
     (issue) => issue.level === 'error',
   )
   if (blocking.length > 0) {
@@ -136,6 +136,51 @@ async function main() {
         [interest.slug, interest.name, interest.emoji, interest.keywords, interest.position],
       )
       interestIds.set(interest.slug, rows[0]!.id)
+    }
+
+    // ─── Keşif modları (ADR 0007) ─────────────────────────────────────────
+    // Yönetim arayüzü bu tabloları düzenliyor; içerik dosyası yazım kaynağı.
+    for (const mode of discoveryModes) {
+      const { rows } = await client.query<{ id: string }>(
+        `insert into discovery_modes
+           (slug, name, emoji, description, prompt_hint, language, position, is_active)
+         values ($1, $2, $3, $4, $5, $6, $7, $8)
+         on conflict (slug) do update set
+           name = excluded.name, emoji = excluded.emoji,
+           description = excluded.description, prompt_hint = excluded.prompt_hint,
+           language = excluded.language, position = excluded.position,
+           is_active = excluded.is_active
+         returning id`,
+        [
+          mode.slug,
+          mode.name,
+          mode.emoji,
+          mode.description,
+          mode.promptHint,
+          mode.language,
+          mode.position,
+          mode.isActive,
+        ],
+      )
+      const modeId = rows[0]!.id
+
+      // Eğilimler baştan yazılır: içerik dosyasından çıkarılan bir konu
+      // veritabanında kalmasın.
+      await client.query(`delete from discovery_mode_topics where mode_id = $1`, [modeId])
+      for (const topic of mode.topics) {
+        await client.query(
+          `insert into discovery_mode_topics (mode_id, topic_id, weight) values ($1, $2, $3)`,
+          [modeId, topicIds.get(topic.slug), topic.weight],
+        )
+      }
+
+      await client.query(`delete from discovery_mode_interests where mode_id = $1`, [modeId])
+      for (const interest of mode.interests) {
+        await client.query(
+          `insert into discovery_mode_interests (mode_id, interest_id, weight) values ($1, $2, $3)`,
+          [modeId, interestIds.get(interest.slug), interest.weight],
+        )
+      }
     }
 
     // ─── Başarımlar ve kurumlar ───────────────────────────────────────────
@@ -379,6 +424,7 @@ async function main() {
       union all select 'book_topics', count(*)::text from book_topics
       union all select 'book_interests', count(*)::text from book_interests
       union all select 'development_topics', count(*)::text from development_topics
+      union all select 'discovery_modes', count(*)::text from discovery_modes
       union all select 'achievements', count(*)::text from achievements
       order by 1
     `)

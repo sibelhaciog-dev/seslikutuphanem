@@ -3,10 +3,12 @@ import { resolve } from 'node:path'
 import {
   achievementsSchema,
   booksSchema,
+  discoveryModesSchema,
   organizationsSchema,
   taxonomySchema,
   type Achievement,
   type BookContent,
+  type DiscoveryMode,
   type Organization,
   type Taxonomy,
 } from './schema'
@@ -40,11 +42,16 @@ export function loadOrganizations(): Organization[] {
   return organizationsSchema.parse(readJson('organizations.json'))
 }
 
+export function loadDiscoveryModes(): DiscoveryMode[] {
+  return discoveryModesSchema.parse(readJson('discovery-modes.json'))
+}
+
 export function loadAllContent() {
   return {
     taxonomy: loadTaxonomy(),
     books: loadBooks(),
     achievements: loadAchievements(),
     organizations: loadOrganizations(),
+    discoveryModes: loadDiscoveryModes(),
   }
 }

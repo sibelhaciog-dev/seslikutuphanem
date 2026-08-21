@@ -66,6 +66,7 @@ erDiagram
 | `0017_reading_stats_lock`  | Okuma sayacı yarış durumu: sayım öncesi `for no key update`                                                                                  |
 | `0018_platform_stats`      | Yönetim panosu sayıları; satır sızdırmadan toplam verir                                                                                      |
 | `0019_ai_recommendations`  | Yapay zekâ öneri geçmişi (ADR 0007); niyet metni + sonuçlar                                                                                  |
+| `0020_discovery_modes`     | Keşif modları + konu/ilgi eğilimleri; yönetimden düzenlenebilir                                                                              |
 
 Sıralı çalıştırılır; hiçbiri kendinden sonrakine atıfta bulunmaz.
 
@@ -238,11 +239,12 @@ gerçek Supabase yığınına karşı 25 iddia çalıştırır.
 
 ## 6. Görünümler
 
-| Görünüm               | Kullanım                                                 |
-| --------------------- | -------------------------------------------------------- |
-| `catalog_books`       | Ana sayfa; yazar, konu ve alan slug'ları dizi olarak     |
-| `book_details`        | Kitap sayfası; katkıda bulunanlar ve konular JSON olarak |
-| `child_reading_stats` | Rapor özetleri                                           |
+| Görünüm                  | Kullanım                                                 |
+| ------------------------ | -------------------------------------------------------- |
+| `catalog_books`          | Ana sayfa; yazar, konu ve alan slug'ları dizi olarak     |
+| `book_details`           | Kitap sayfası; katkıda bulunanlar ve konular JSON olarak |
+| `child_reading_stats`    | Rapor özetleri                                           |
+| `discovery_mode_details` | Keşif modu + eğilimleri tek satırda (motor için)         |
 
 Hepsi `security_invoker = on` ile tanımlıdır — yani çağıran kullanıcının
 yetkisiyle çalışır ve alttaki tabloların RLS'i geçerli kalır. Bu olmadan

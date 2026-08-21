@@ -51,6 +51,32 @@ export const taxonomySchema = z.object({
   interests: z.array(interestSchema).min(1),
 })
 
+// ─── Keşif modları ─────────────────────────────────────────────────────────
+// Aday havuzunu belirli konulara/ilgi alanlarına eğen ayarlar (ADR 0007).
+// Ağırlık `book_topics.relevance` ile aynı ölçekte: 1 zayıf, 5 güçlü.
+
+const modeWeightSchema = z.object({
+  slug,
+  weight: z.number().int().min(1).max(5).default(3),
+})
+
+export const discoveryModeSchema = z.object({
+  slug,
+  name: z.string().min(1).max(60),
+  emoji: z.string().min(1).max(8).nullable().default(null),
+  description: z.string().max(200).nullable().default(null),
+  /** Yapay zekâ istemine eklenen cümle; modun niyetini modele anlatır. */
+  promptHint: z.string().max(400).nullable().default(null),
+  language: z.enum(['tr', 'en']).nullable().default(null),
+  position: z.number().int().nonnegative(),
+  isActive: z.boolean().default(true),
+  topics: z.array(modeWeightSchema).default([]),
+  interests: z.array(modeWeightSchema).default([]),
+})
+
+export const discoveryModesSchema = z.array(discoveryModeSchema)
+export type DiscoveryMode = z.infer<typeof discoveryModeSchema>
+
 export type Taxonomy = z.infer<typeof taxonomySchema>
 export type DevelopmentArea = z.infer<typeof developmentAreaSchema>
 export type DevelopmentTopic = z.infer<typeof developmentTopicSchema>
@@ -173,13 +199,48 @@ export interface ContentIssue {
  * Şema tek başına yakalayamayan tutarlılık kurallarını denetler:
  * yinelenen slug, taksonomide olmayan konu, tutarsız yaş aralığı…
  */
-export function checkContentConsistency(books: BookContent[], taxonomy: Taxonomy): ContentIssue[] {
+export function checkContentConsistency(
+  books: BookContent[],
+  taxonomy: Taxonomy,
+  discoveryModes: DiscoveryMode[] = [],
+): ContentIssue[] {
   const issues: ContentIssue[] = []
 
   const topicSlugs = new Set(
     taxonomy.developmentAreas.flatMap((area) => area.topics.map((topic) => topic.slug)),
   )
   const interestSlugs = new Set(taxonomy.interests.map((interest) => interest.slug))
+
+  const seenModeSlugs = new Set<string>()
+  for (const mode of discoveryModes) {
+    if (seenModeSlugs.has(mode.slug)) {
+      issues.push({ level: 'error', message: `Yinelenen keşif modu: ${mode.slug}` })
+    }
+    seenModeSlugs.add(mode.slug)
+
+    for (const topic of mode.topics) {
+      if (!topicSlugs.has(topic.slug)) {
+        issues.push({
+          level: 'error',
+          message: `Keşif modu "${mode.slug}" bilinmeyen konuya işaret ediyor: ${topic.slug}`,
+        })
+      }
+    }
+    for (const interest of mode.interests) {
+      if (!interestSlugs.has(interest.slug)) {
+        issues.push({
+          level: 'error',
+          message: `Keşif modu "${mode.slug}" bilinmeyen ilgi alanına işaret ediyor: ${interest.slug}`,
+        })
+      }
+    }
+    if (mode.topics.length === 0 && mode.interests.length === 0) {
+      issues.push({
+        level: 'warning',
+        message: `Keşif modu "${mode.slug}" hiçbir konuya eğilmiyor; aday havuzunu etkilemez.`,
+      })
+    }
+  }
 
   const seenSlugs = new Set<string>()
   const seenShortcodes = new Set<string>()
