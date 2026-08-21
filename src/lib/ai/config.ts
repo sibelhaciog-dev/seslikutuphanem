@@ -63,7 +63,13 @@ export function aiEnabled(): boolean {
   return readAiConfig() !== null
 }
 
-/** Kullanıcı başına günlük kotalar. */
+/**
+ * Kullanıcı başına günlük kotalar.
+ *
+ * DİKKAT: Buraya yeni bir kalem eklerken `ai_usage_events.feature` kısıtını
+ * da genişletin (bkz. 0021). Aksi halde kullanım kaydı sessizce düşer ve
+ * kota fiilen uygulanmaz.
+ */
 export const AI_QUOTAS = {
   cover_scan: { windowHours: 24, limit: 30 },
   report_note: { windowHours: 24, limit: 10 },

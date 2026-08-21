@@ -33,11 +33,20 @@ export async function recordUsage(
     succeeded: boolean
   },
 ): Promise<void> {
-  await supabase.from('ai_usage_events').insert({
+  const { error } = await supabase.from('ai_usage_events').insert({
     user_id: input.userId,
     feature: input.feature,
     model: input.model ?? null,
     total_tokens: input.totalTokens ?? null,
     succeeded: input.succeeded,
   })
+
+  // İstek DÜŞÜRÜLMÜYOR: yapay zekâ çağrısı zaten yapıldı, isteği reddetmek
+  // hiçbir şeyi geri almaz. Ama sessiz kalmak da olmaz — bu yazma başarısız
+  // olursa kota fiilen uygulanmaz. Bir kez böyle oldu: `feature` kısıtı yeni
+  // kalemi tanımıyordu ve hata yutulduğu için haftalarca görünmeyebilirdi
+  // (bkz. 0021).
+  if (error) {
+    console.error(`ai_usage_events yazılamadı (${input.feature}): ${error.message}`)
+  }
 }

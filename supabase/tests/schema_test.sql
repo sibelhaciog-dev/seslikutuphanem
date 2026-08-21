@@ -778,4 +778,43 @@ select pg_temp.assert_eq(
 
 delete from public.discovery_modes where slug in ('test-pasif', 'editor-modu');
 
+-- ═══ 16. Kota kalemleri (0021) ════════════════════════════════════════════
+-- `AI_QUOTAS` ile bu kısıt birlikte güncellenmeli; ayrışırlarsa kullanım
+-- kaydı sessizce düşer ve kota uygulanmaz.
+do $$ begin raise notice '── 16. Kota kalemleri ──'; end $$;
+
+reset role;
+insert into auth.users (id, email) values
+  ('a0000000-0000-0000-0000-0000000000b1', 'kota@ornek.com');
+
+do $$
+declare
+  kalem text;
+begin
+  foreach kalem in array array['cover_scan', 'report_note', 'recommendation']
+  loop
+    insert into public.ai_usage_events (user_id, feature, succeeded)
+    values ('a0000000-0000-0000-0000-0000000000b1', kalem, true);
+  end loop;
+  raise notice '  ✓ üç kota kalemi de kabul ediliyor';
+end $$;
+
+select pg_temp.assert_eq(
+  (select count(*)::int from public.ai_usage_events
+   where user_id = 'a0000000-0000-0000-0000-0000000000b1'),
+  3, 'üç kullanım kaydı yazıldı');
+
+-- Tanınmayan kalem reddedilmeli (yazım hatası fark edilsin).
+do $$
+begin
+  insert into public.ai_usage_events (user_id, feature, succeeded)
+  values ('a0000000-0000-0000-0000-0000000000b1', 'bilinmeyen_ozellik', true);
+  raise exception 'BAŞARISIZ: tanınmayan kota kalemi kabul edildi';
+exception
+  when check_violation then
+    raise notice '  ✓ tanınmayan kota kalemi reddediliyor';
+end $$;
+
+delete from auth.users where id = 'a0000000-0000-0000-0000-0000000000b1';
+
 do $$ begin raise notice ''; raise notice 'TÜM ŞEMA TESTLERİ GEÇTİ'; end $$;
