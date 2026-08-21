@@ -67,6 +67,8 @@ export function aiEnabled(): boolean {
 export const AI_QUOTAS = {
   cover_scan: { windowHours: 24, limit: 30 },
   report_note: { windowHours: 24, limit: 10 },
+  /** Keşif önerisi (ADR 0007). Tek çağrı, kısa istem — sınır daha rahat. */
+  recommendation: { windowHours: 24, limit: 20 },
 } as const
 
 export type AiFeature = keyof typeof AI_QUOTAS

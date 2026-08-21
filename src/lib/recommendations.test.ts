@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { AREAS, INTERESTS, indexItems, makeBook, makeChild, makeItem } from '@/test/factories'
-import { recommendForChild, similarBooks } from './recommendations'
+import { candidatePool, recommendForChild, similarBooks } from './recommendations'
 
 const TAXONOMY = { areas: AREAS, interests: INTERESTS }
 
@@ -91,5 +91,53 @@ describe('recommendForChild', () => {
 
   it('profil yoksa boş liste döner', () => {
     expect(recommendForChild(null, CATALOG, {}, TAXONOMY)).toEqual([])
+  })
+})
+
+describe('candidatePool', () => {
+  const child = makeChild({ interestSlugs: ['uzay'], focusTopicSlugs: [] })
+
+  it('mod ağırlığı sıralamayı değiştirir', () => {
+    const pool = candidatePool(child, CATALOG, {}, TAXONOMY, {
+      topicWeights: { 'duygu-yonetimi': 5 },
+    })
+    expect(pool[0]!.book.topicSlugs).toContain('duygu-yonetimi')
+  })
+
+  // Profil verilmiyor: yaş süzgeci devreye girip 'uzak' kitabını elemesin,
+  // ölçmek istediğimiz yalnızca serbest metnin etkisi.
+  it('serbest metindeki kelime eşleşmesi puan getirir', () => {
+    const withPrompt = candidatePool(null, CATALOG, {}, TAXONOMY, { prompt: 'roket gezegen uzay' })
+    const withoutPrompt = candidatePool(null, CATALOG, {}, TAXONOMY, {})
+    const scoreOf = (pool: ReturnType<typeof candidatePool>, id: string) =>
+      pool.find((entry) => entry.book.id === id)?.score ?? 0
+    expect(scoreOf(withPrompt, 'uzak')).toBeGreaterThan(scoreOf(withoutPrompt, 'uzak'))
+  })
+
+  // Havuz boş kalırsa yapay zekânın seçecek bir şeyi olmaz.
+  it('hiçbir sinyal yokken bile havuz boş dönmez', () => {
+    const pool = candidatePool(null, CATALOG, {}, TAXONOMY, {})
+    expect(pool.length).toBeGreaterThan(0)
+  })
+
+  it('okunmuş ve yarım bırakılmış kitapları havuza almaz', () => {
+    const library = indexItems([
+      makeItem({ bookId: 'okunmus', status: 'read' }),
+      makeItem({ bookId: 'benzer', status: 'abandoned' }),
+    ])
+    const ids = candidatePool(child, CATALOG, library, TAXONOMY, {}).map((entry) => entry.book.id)
+    expect(ids).not.toContain('okunmus')
+    expect(ids).not.toContain('benzer')
+  })
+
+  // Yaş güvenliği bu katmanda; modele güvenilmiyor (ADR 0007).
+  it('yaşa uymayan kitabı havuza almaz', () => {
+    const küçük = makeChild({ birthDate: `${new Date().getFullYear() - 3}-01-01` })
+    const ids = candidatePool(küçük, CATALOG, {}, TAXONOMY, {}).map((entry) => entry.book.id)
+    expect(ids).not.toContain('uzak')
+  })
+
+  it('istenen sayıdan fazla aday döndürmez', () => {
+    expect(candidatePool(child, CATALOG, {}, TAXONOMY, {}, 2)).toHaveLength(2)
   })
 })
