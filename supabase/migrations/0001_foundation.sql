@@ -2,13 +2,18 @@
 -- 0001 — Temel: uzantılar, enum'lar, yardımcı fonksiyonlar
 --
 -- Bu şema SIFIRDAN kurulur. Eski sürümle uyumluluk kaygısı yoktur (ADR 0006).
--- Sıralı çalıştırın: 0001 → 0007.
+-- Sıralı çalıştırın: 0001 → 0012.
 -- ═══════════════════════════════════════════════════════════════════════════
 
-create extension if not exists pgcrypto;
-create extension if not exists citext;
-create extension if not exists unaccent;
-create extension if not exists pg_trgm;
+-- Uzantılar `extensions` şemasına kurulur (Supabase'in yerleşik düzeni).
+-- `public` içine kurmak Supabase güvenlik denetçisinin uyardığı bir durumdur;
+-- ayrıca pgcrypto zaten orada kurulu geldiği için karışıklık çıkarır.
+create schema if not exists extensions;
+
+create extension if not exists pgcrypto with schema extensions;
+create extension if not exists citext with schema extensions;
+create extension if not exists unaccent with schema extensions;
+create extension if not exists pg_trgm with schema extensions;
 
 -- ─── Türkçe tam metin arama yapılandırması ─────────────────────────────────
 -- Bilinçli olarak GÖVDELEME (stemming) YOK.
@@ -26,7 +31,7 @@ begin
   if not exists (select 1 from pg_ts_config where cfgname = 'search_tr') then
     create text search configuration public.search_tr (copy = simple);
     alter text search configuration public.search_tr
-      alter mapping for hword, hword_part, word with unaccent, simple;
+      alter mapping for hword, hword_part, word with extensions.unaccent, simple;
   end if;
 end $$;
 
@@ -41,7 +46,7 @@ declare
   cleaned text;
   terms text[];
 begin
-  cleaned := lower(public.unaccent(coalesce(input, '')));
+  cleaned := lower(extensions.unaccent(coalesce(input, '')));
   cleaned := regexp_replace(cleaned, '[^a-z0-9]+', ' ', 'g');
 
   terms := array(

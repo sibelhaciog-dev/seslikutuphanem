@@ -45,20 +45,33 @@ erDiagram
 
 ## 2. Migration dosyaları
 
-| Dosya             | Kurduğu                                                                                                                                      |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0001_foundation` | Uzantılar, arama yapılandırması, enum'lar, `set_updated_at`, `slugify`, `build_search_query`                                                 |
-| `0002_roles`      | `user_roles`, `is_staff()`, `is_admin()`                                                                                                     |
-| `0003_taxonomy`   | `development_areas`, `development_topics`, `interests`                                                                                       |
-| `0004_catalog`    | `publishers`, `people`, `series`, `books`, ilişki tabloları, arama vektörü tetikleyicileri                                                   |
-| `0005_accounts`   | `profiles`, `children`, `child_interests`, `child_focus_topics`, `owns_child()`                                                              |
-| `0006_library`    | `custom_books`, `library_items`, `reading_sessions`, `reading_notes`, `achievements`, `child_achievements`, türetme ve başarım fonksiyonları |
-| `0007_community`  | `feedback`, `donation_organizations`, `donation_requests`, `exchange_listings`                                                               |
-| `0008_storage`    | `catalog-covers` ve `user-covers` kovaları + politikaları                                                                                    |
-| `0009_views`      | `catalog_books`, `book_details`, `child_reading_stats`                                                                                       |
-| `0010_ai_usage`   | `ai_usage_events`, `ai_quota_remaining()`                                                                                                    |
+| Dosya                     | Kurduğu                                                                                                                                      |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0001_foundation`         | Uzantılar, arama yapılandırması, enum'lar, `set_updated_at`, `slugify`, `build_search_query`                                                 |
+| `0002_roles`              | `user_roles`, `is_staff()`, `is_admin()`                                                                                                     |
+| `0003_taxonomy`           | `development_areas`, `development_topics`, `interests`                                                                                       |
+| `0004_catalog`            | `publishers`, `people`, `series`, `books`, ilişki tabloları, arama vektörü tetikleyicileri                                                   |
+| `0005_accounts`           | `profiles`, `children`, `child_interests`, `child_focus_topics`, `owns_child()`                                                              |
+| `0006_library`            | `custom_books`, `library_items`, `reading_sessions`, `reading_notes`, `achievements`, `child_achievements`, türetme ve başarım fonksiyonları |
+| `0007_community`          | `feedback`, `donation_organizations`, `donation_requests`, `exchange_listings`                                                               |
+| `0008_storage`            | `catalog-covers` ve `user-covers` kovaları + politikaları                                                                                    |
+| `0009_views`              | `catalog_books`, `book_details`, `child_reading_stats`                                                                                       |
+| `0010_ai_usage`           | `ai_usage_events`, `ai_quota_remaining()`                                                                                                    |
+| `0011_grants`             | Tablo bazlı `GRANT`'ler (RLS tek başına yetmez — aşağıya bakın)                                                                              |
+| `0012_trigger_privileges` | Türetilmiş alan tetikleyicilerini `security definer` yapar                                                                                   |
+| `0013_function_hardening` | `search_path` sabitleme + iç fonksiyonları REST yüzeyinden çıkarma                                                                           |
+| `0014_rls_performance`    | Politikalarda InitPlan optimizasyonu, `FOR ALL` ayrıştırma, FK indeksleri                                                                    |
 
 Sıralı çalıştırılır; hiçbiri kendinden sonrakine atıfta bulunmaz.
+
+### Uzantılar `extensions` şemasında
+
+`pgcrypto`, `citext`, `unaccent`, `pg_trgm` — hepsi `public` yerine
+`extensions` şemasına kurulur. Supabase'in yerleşik düzeni budur; `public`
+içine kurmak güvenlik denetçisinin uyardığı bir durum. Pratik sonucu: bu
+uzantılardan gelen her şey nitelenerek yazılır — `extensions.unaccent(...)`,
+`extensions.citext`, `extensions.gin_trgm_ops`. Niteleme unutulursa migration
+gerçek Supabase'de patlar ama yerel testte geçebilir.
 
 ## 3. Katalog tarafı
 
@@ -168,6 +181,29 @@ Türetilmiş alanları güncelleyen tetikleyiciler `security definer`'dır
 rolüyle yapılır, zincirleme silme `reading_sessions` tablosuna dokunur ve bu
 rolün `public` şemasında izni yoktur. Definer olmasaydı hesap silme —
 Supabase panelinden bile — hata verirdi.
+
+### Fonksiyon yüzeyi
+
+PostgREST `public` şemasındaki **her** fonksiyonu `/rest/v1/rpc/<ad>` altında
+yayımlar; PostgreSQL de her yeni fonksiyona varsayılan olarak `PUBLIC` için
+`EXECUTE` verir. İkisi birleşince tetikleyici gövdeleri bile dışarıdan
+çağrılabilir hale geliyordu. `0013` bunları geri alır.
+
+Bilinçli olarak açık bırakılanlar: `is_staff()`, `is_admin()`, `owns_child()`,
+`owns_library_item()`. Bunlar RLS politikalarının **içinden** çağrılıyor;
+politika ifadesi sorgulayan rolün yetkisiyle değerlendirildiği için EXECUTE
+geri alınırsa katalog sayfası komple kırılır. Üçü de yalnızca çağıranın kendi
+durumunu döndürür.
+
+### Politikalarda InitPlan
+
+Politika ifadesindeki `auth.uid()` ve `is_staff()` çağrıları **her satır için**
+yeniden çalışır. `(select auth.uid())` biçiminde sarınca PostgreSQL bunu bir
+InitPlan'a çevirip sorgu başına bir kez hesaplar (`0014`). `is_staff()` için
+kazanç daha da büyük: o çağrı `user_roles` tablosuna gidiyor.
+
+`owns_child(child_id)` bilinçli olarak sarılmadı — argümanı satırdan geldiği
+için ilişkili (correlated) alt sorgu olur, InitPlan'a dönüşmez.
 
 Yalıtım `supabase/tests/schema_test.sql` içinde doğrulanır: iki ayrı ebeveyn,
 bir editör ve anonim ziyaretçi ile 50+ iddia. Ayrıca `npm run test:e2e`

@@ -29,11 +29,26 @@ npm run dev                    # http://localhost:3000
 
 1. Supabase'de yeni proje aç.
 2. **SQL Editor** → `supabase/migrations/` altındaki dosyaları **sırayla**
-   (0001 → 0010) yapıştırıp çalıştır.
-3. İçeriği yükle:
+   (0001 → 0014) yapıştırıp çalıştır.
+3. İçeriği yükle. İki yol var:
+
+   **a) Veritabanı parolası varsa** — tek komut:
+
    ```bash
    DATABASE_URL="postgresql://..." npm run db:sync
    ```
+
+   **b) Yalnızca SQL çalıştırma yetkisi varsa** (panel, MCP) — önce tohum
+   dosyalarını üret, sonra sırayla yapıştır:
+
+   ```bash
+   npm run content:sql          # supabase/seed/ altına yazar
+   ```
+
+   Üretilen dosyalar idempotenttir; tekrar çalıştırmak zarar vermez. Yükleme
+   sonrası sayıları doğrulayın: 196 kitap, 451 `book_topics`, 141
+   `book_interests`.
+
 4. Kendine editör yetkisi ver (SQL Editor'de):
    ```sql
    insert into public.user_roles (user_id, role)
@@ -89,29 +104,48 @@ Senkron idempotenttir; defalarca çalıştırılabilir.
 3. `NEXT_PUBLIC_SITE_URL` gerçek alan adı olsun.
 4. Aynı adresi Supabase Redirect URLs listesine ekle.
 
+### Üretim projesi
+
+| Alan          | Değer                                      |
+| ------------- | ------------------------------------------ |
+| Supabase adı  | `kutuphanem`                               |
+| Proje kimliği | `ygaxtmuzhnntzdcltmgn`                     |
+| API adresi    | `https://ygaxtmuzhnntzdcltmgn.supabase.co` |
+
+Vercel'e girilecek değişkenler: `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` (panelde Project Settings → API →
+publishable key), `NEXT_PUBLIC_SITE_URL`, ve yapay zekâ kullanılacaksa
+`AI_BASE_URL` / `AI_API_KEY` / `AI_TEXT_MODEL` / `AI_VISION_MODEL`.
+
+`DATABASE_URL` **Vercel'e girilmez** — yalnızca yerelde içerik senkronu için.
+
 ## 8. Komut özeti
 
-| Komut                      | Ne yapar                       |
-| -------------------------- | ------------------------------ |
-| `npm run dev`              | Geliştirme sunucusu            |
-| `npm run build` / `start`  | Üretim derlemesi / çalıştırma  |
-| `npm run check`            | Tip kontrolü + lint + testler  |
-| `npm test`                 | Birim testleri                 |
-| `npm run db:test`          | Şema + RLS testleri (Docker)   |
-| `npm run db:local`         | Yerel şemayı kur ve açık bırak |
-| `npm run db:types`         | Veritabanı tiplerini üret      |
-| `npm run db:sync`          | İçeriği veritabanına aktar     |
-| `npm run content:validate` | İçerik dosyalarını doğrula     |
-| `npm run format`           | Kod biçimlendirme              |
+| Komut                      | Ne yapar                                         |
+| -------------------------- | ------------------------------------------------ |
+| `npm run dev`              | Geliştirme sunucusu                              |
+| `npm run build` / `start`  | Üretim derlemesi / çalıştırma                    |
+| `npm run check`            | Tip kontrolü + lint + testler                    |
+| `npm test`                 | Birim testleri                                   |
+| `npm run db:test`          | Şema + RLS testleri (Docker)                     |
+| `npm run db:local`         | Yerel şemayı kur ve açık bırak                   |
+| `npm run db:types`         | Veritabanı tiplerini üret                        |
+| `npm run db:sync`          | İçeriği veritabanına aktar                       |
+| `npm run content:validate` | İçerik dosyalarını doğrula                       |
+| `npm run content:sql`      | `supabase/seed/` altına SQL tohum dosyaları üret |
+| `npm run format`           | Kod biçimlendirme                                |
 
 ## 9. Sorun giderme
 
-| Belirti                             | Olası sebep                                            |
-| ----------------------------------- | ------------------------------------------------------ |
-| Tüm sayfalar 500                    | `NEXT_PUBLIC_SUPABASE_*` eksik veya hatalı             |
-| Katalog boş, rehber menüsü yok      | Migration çalıştırılmamış veya `db:sync` yapılmamış    |
-| Rehber menüsü boş ama site açılıyor | Veritabanına erişilemiyor (taksonomi hatası yutuluyor) |
-| Kapak tarama 503                    | `AI_API_KEY` tanımlı değil                             |
-| Kapak tarama 429                    | Günlük kota doldu                                      |
-| Yönetim sayfası ana sayfaya atıyor  | Kullanıcının `user_roles` kaydı yok                    |
-| `db:sync` "relation does not exist" | Migration'lar eksik veya sırasız çalıştırılmış         |
+| Belirti                                      | Olası sebep                                                                                     |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Tüm sayfalar 500                             | `NEXT_PUBLIC_SUPABASE_*` eksik veya hatalı                                                      |
+| Katalog boş, rehber menüsü yok               | Migration çalıştırılmamış veya `db:sync` yapılmamış                                             |
+| Rehber menüsü boş ama site açılıyor          | Veritabanına erişilemiyor (taksonomi hatası yutuluyor)                                          |
+| Kapak tarama 503                             | `AI_API_KEY` tanımlı değil                                                                      |
+| Kapak tarama 429                             | Günlük kota doldu                                                                               |
+| Yönetim sayfası ana sayfaya atıyor           | Kullanıcının `user_roles` kaydı yok                                                             |
+| `db:sync` "relation does not exist"          | Migration'lar eksik veya sırasız çalıştırılmış                                                  |
+| Sayfada eski/yanlış veri, veritabanı doğru   | Next.js disk önbelleği. Veritabanı değiştirdiyseniz `rm -rf .next` ve yeniden derleyin          |
+| Migration yerelde geçip Supabase'de patlıyor | Uzantı nesnesi nitelenmemiş — `extensions.unaccent` gibi yazılmalı                              |
+| `permission denied for function ...`         | Fonksiyon `0013`'te REST yüzeyinden çıkarıldı; uygulamadan çağrılıyorsa `grant execute` ekleyin |

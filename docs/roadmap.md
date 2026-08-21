@@ -53,8 +53,9 @@
 
 - [x] `npm run db:sync` — içerik → Supabase (idempotent upsert)
 - [x] Otomatik konu etiketleme (anahtar kelimelerden)
-- [~] Ayrı SQL tohum dosyası — **gerekmedi**: `DATABASE_URL` ile
-  `npm run db:sync` doğrudan çalışıyor, ikinci bir yol gereksiz.
+- [x] Ayrı SQL tohum dosyası (`npm run content:sql`) — `DATABASE_URL`
+      olmadan, yalnızca SQL çalıştırma yetkisiyle tohumlamak için. Üretim
+      projesi bu yolla dolduruldu.
 - [x] Yerel Postgres üzerinde tohumlama doğrulaması
 
 ## Faz 4 — Yapay zekâ katmanı (OpenAI uyumlu)
@@ -88,13 +89,22 @@
 - [x] Uçtan uca test (`npm run test:e2e`) — gerçek auth + RLS + tetikleyiciler
 - [x] Mobil kontrolü (390 px: yatay taşma yok, sayfa genişliği doğru)
 
-## Faz 7 — Erişim geldiğinde (bekleyen)
+## Faz 7 — Üretim projesi kurulumu
 
-- [ ] Yeni Supabase projesinde migration'ları çalıştır (0001 → 0012, sırayla)
-- [ ] `npm run db:sync` ile kataloğu yükle
-- [ ] Auth akışlarını uçtan uca dene (kayıt → doğrulama → onboarding)
+Supabase projesi: **kutuphanem** (`ygaxtmuzhnntzdcltmgn`).
+
+- [x] Migration'lar sırayla çalıştırıldı (0001 → 0014)
+- [x] Katalog yüklendi — 196 kitap, 451 konu bağı, 141 ilgi bağı
+      (imzalar yerel referansla birebir aynı)
+- [x] Türkçe arama üretimde doğrulandı
+- [x] Güvenlik denetçisi: 30 uyarı → 10 (kalanlar bilinçli, `0013`)
+- [x] Başarım denetçisi: tüm WARN'lar kapandı (`0014`)
+- [x] Kayıt tetikleyicisi ve silme zinciri üretimde denendi
+- [x] Uygulama üretim veritabanına karşı derlendi ve çalıştırıldı
+- [ ] Auth akışını tarayıcıdan uçtan uca dene (kayıt → e-posta → onboarding)
 - [ ] Vercel'e bağla, ortam değişkenlerini gir
 - [ ] Supabase Redirect URL listesine üretim adresini ekle
+- [ ] İlk yöneticiyi ata (`user_roles`) — kullanıcı oluştuktan sonra
 - [ ] Depolama kovalarını ve boyut sınırlarını doğrula
 
 ## Sonraki sürüm için fikirler (kapsam dışı)

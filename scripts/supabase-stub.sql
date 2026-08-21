@@ -1,8 +1,11 @@
 -- Supabase'in hazır sağladığı şemaların yerel taklidi.
 -- YALNIZCA test içindir; üretimde çalıştırılmaz.
-create extension if not exists pgcrypto;
+create schema if not exists extensions;
 create schema if not exists auth;
 create schema if not exists storage;
+
+-- Supabase pgcrypto'yu `extensions` şemasında kurulu getirir; taklit ediyoruz.
+create extension if not exists pgcrypto with schema extensions;
 
 do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated; end if;

@@ -24,7 +24,8 @@
     "db:types": "tsx scripts/generate-db-types.ts",
     "test:e2e": "node scripts/e2e/local-smoke.mjs",
     "db:sync:local": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres tsx scripts/db-sync.ts",
-    "db:types:local": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres tsx scripts/generate-db-types.ts"
+    "db:types:local": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres tsx scripts/generate-db-types.ts",
+    "content:sql": "tsx scripts/generate-seed-sql.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

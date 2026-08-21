@@ -8,7 +8,7 @@
 -- ─── Ebeveyn profili ───────────────────────────────────────────────────────
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
-  email citext,
+  email extensions.citext,
   display_name text check (display_name is null or char_length(trim(display_name)) between 1 and 80),
   locale text not null default 'tr',
   timezone text not null default 'Europe/Istanbul',

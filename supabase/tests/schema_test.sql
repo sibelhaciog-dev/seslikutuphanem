@@ -389,4 +389,44 @@ select pg_temp.assert_eq(
 select pg_temp.assert(
   (select count(*) from public.books) > 0, 'katalog silinmedi');
 
+
+-- ═══ 9. Fonksiyon yüzeyi (0013) ════════════════════════════════════════════
+-- PostgREST `public` şemasındaki her fonksiyonu /rest/v1/rpc altında yayımlar.
+-- İç kullanım fonksiyonları oraya sızmamalı; `search_path` sabit olmalı.
+do $$ begin raise notice '── 9. Fonksiyon yüzeyi ──'; end $$;
+
+select pg_temp.assert(
+  not has_function_privilege('anon', 'public.refresh_book_search_vector(uuid)', 'execute'),
+  'anon arama vektörü tazeleyicisini çağıramaz');
+
+select pg_temp.assert(
+  not has_function_privilege('authenticated', 'public.sync_library_item_reading_stats(uuid)', 'execute'),
+  'üye okuma istatistiği güncelleyicisini çağıramaz');
+
+select pg_temp.assert(
+  not has_function_privilege('anon', 'public.handle_new_user()', 'execute'),
+  'anon kayıt tetikleyicisini çağıramaz');
+
+select pg_temp.assert(
+  not has_function_privilege('anon', 'public.child_points(uuid)', 'execute'),
+  'anon çocuk puanını sorgulayamaz');
+
+select pg_temp.assert(
+  has_function_privilege('authenticated', 'public.child_points(uuid)', 'execute'),
+  'üye çocuk puanını sorgulayabilir');
+
+-- RLS politikaları bu yardımcıları çağırıyor; EXECUTE geri alınırsa katalog
+-- sayfası komple kırılır (bkz. 0013 başlığındaki not).
+select pg_temp.assert(
+  has_function_privilege('anon', 'public.is_staff()', 'execute'),
+  'anon is_staff çağırabilir (RLS politikası kullanıyor)');
+
+select pg_temp.assert(
+  (select count(*) = 5 from pg_proc
+   where pronamespace = 'public'::regnamespace
+     and proname in ('build_search_query', 'set_updated_at', 'slugify',
+                     'child_reading_streak', 'child_points')
+     and proconfig is not null),
+  'denetçinin işaretlediği 5 fonksiyonda search_path sabit');
+
 do $$ begin raise notice ''; raise notice 'TÜM ŞEMA TESTLERİ GEÇTİ'; end $$;

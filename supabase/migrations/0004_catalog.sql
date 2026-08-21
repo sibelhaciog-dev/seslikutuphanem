@@ -31,7 +31,7 @@ create table public.people (
   updated_at timestamptz not null default now()
 );
 
-create index people_name_trgm_idx on public.people using gin (display_name gin_trgm_ops);
+create index people_name_trgm_idx on public.people using gin (display_name extensions.gin_trgm_ops);
 
 create trigger people_updated_at before update on public.people
   for each row execute function public.set_updated_at();
@@ -98,7 +98,7 @@ create index books_status_posted_idx on public.books (status, posted_at desc nul
 create index books_language_idx on public.books (language) where status = 'published';
 create index books_age_idx on public.books (age_min, age_max) where status = 'published';
 create index books_search_idx on public.books using gin (search_vector);
-create index books_title_trgm_idx on public.books using gin (title gin_trgm_ops);
+create index books_title_trgm_idx on public.books using gin (title extensions.gin_trgm_ops);
 create index books_series_idx on public.books (series_id, series_position);
 
 create trigger books_updated_at before update on public.books
