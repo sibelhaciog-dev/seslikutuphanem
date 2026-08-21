@@ -109,7 +109,11 @@ Senkron idempotenttir; defalarca çalıştırılabilir.
 
 ## 7. Yayına alma (Vercel)
 
-1. Depoyu Vercel'e bağla (framework otomatik algılanır).
+1. Depoyu Vercel'e bağla. Framework algılaması `vercel.json` ile depodan
+   geliyor (`"framework": "nextjs"`), panelden ayarlamaya gerek yok.
+   Not: Vercel algılamayı **içe aktarma anında** ve o anki üretim dalına
+   bakarak yapar; dal yanlışsa algılama boş kalır ve derleme çıktısını
+   statik site sanır.
 2. Ortam değişkenlerini gir (`DATABASE_URL` hariç).
 3. `NEXT_PUBLIC_SITE_URL` gerçek alan adı olsun.
 4. Aynı adresi Supabase Redirect URLs listesine ekle.
@@ -147,17 +151,18 @@ publishable key), `NEXT_PUBLIC_SITE_URL`, ve yapay zekâ kullanılacaksa
 
 ## 9. Sorun giderme
 
-| Belirti                                      | Olası sebep                                                                                            |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Tüm sayfalar 500                             | `NEXT_PUBLIC_SUPABASE_*` eksik veya hatalı                                                             |
-| Katalog boş, rehber menüsü yok               | Migration çalıştırılmamış veya `db:sync` yapılmamış                                                    |
-| Rehber menüsü boş ama site açılıyor          | Veritabanına erişilemiyor (taksonomi hatası yutuluyor)                                                 |
-| Kapak tarama 503                             | `AI_API_KEY` tanımlı değil                                                                             |
-| Kapak tarama 429                             | Günlük kota doldu                                                                                      |
-| Yönetim sayfası ana sayfaya atıyor           | Kullanıcının `user_roles` kaydı yok                                                                    |
-| `db:sync` "relation does not exist"          | Migration'lar eksik veya sırasız çalıştırılmış                                                         |
-| Sayfada eski/yanlış veri, veritabanı doğru   | Next.js disk önbelleği. Veritabanı değiştirdiyseniz `rm -rf .next` ve yeniden derleyin                 |
-| Migration yerelde geçip Supabase'de patlıyor | Uzantı nesnesi nitelenmemiş — `extensions.unaccent` gibi yazılmalı                                     |
-| `permission denied for function ...`         | Fonksiyon `0013`'te REST yüzeyinden çıkarıldı; uygulamadan çağrılıyorsa `grant execute` ekleyin        |
-| Yönetim sayfası açılmıyor, kullanıcı yeni    | `pending_role_grants` listesinde adres yok; ekleyip `apply_pending_role_grants()` çalıştırın           |
-| Vercel derlemesi "Invalid URL" ile düşüyor   | `NEXT_PUBLIC_SITE_URL` şemasız yazılmış. Kod artık `https://` ekliyor ama değeri tam yazmak daha doğru |
+| Belirti                                         | Olası sebep                                                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Tüm sayfalar 500                                | `NEXT_PUBLIC_SUPABASE_*` eksik veya hatalı                                                             |
+| Katalog boş, rehber menüsü yok                  | Migration çalıştırılmamış veya `db:sync` yapılmamış                                                    |
+| Rehber menüsü boş ama site açılıyor             | Veritabanına erişilemiyor (taksonomi hatası yutuluyor)                                                 |
+| Kapak tarama 503                                | `AI_API_KEY` tanımlı değil                                                                             |
+| Kapak tarama 429                                | Günlük kota doldu                                                                                      |
+| Yönetim sayfası ana sayfaya atıyor              | Kullanıcının `user_roles` kaydı yok                                                                    |
+| `db:sync` "relation does not exist"             | Migration'lar eksik veya sırasız çalıştırılmış                                                         |
+| Sayfada eski/yanlış veri, veritabanı doğru      | Next.js disk önbelleği. Veritabanı değiştirdiyseniz `rm -rf .next` ve yeniden derleyin                 |
+| Migration yerelde geçip Supabase'de patlıyor    | Uzantı nesnesi nitelenmemiş — `extensions.unaccent` gibi yazılmalı                                     |
+| `permission denied for function ...`            | Fonksiyon `0013`'te REST yüzeyinden çıkarıldı; uygulamadan çağrılıyorsa `grant execute` ekleyin        |
+| Yönetim sayfası açılmıyor, kullanıcı yeni       | `pending_role_grants` listesinde adres yok; ekleyip `apply_pending_role_grants()` çalıştırın           |
+| Vercel derlemesi "Invalid URL" ile düşüyor      | `NEXT_PUBLIC_SITE_URL` şemasız yazılmış. Kod artık `https://` ekliyor ama değeri tam yazmak daha doğru |
+| Vercel "No Output Directory named public" diyor | Framework algılaması boş kalmış. `vercel.json` içindeki `"framework": "nextjs"` bunu çözer             |
