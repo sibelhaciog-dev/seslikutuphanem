@@ -429,4 +429,61 @@ select pg_temp.assert(
      and proconfig is not null),
   'denetçinin işaretlediği 5 fonksiyonda search_path sabit');
 
+-- ═══ 10. Bekleyen rol atamaları (0015) ════════════════════════════════════
+do $$ begin raise notice '── 10. Bekleyen rol atamaları ──'; end $$;
+
+-- Listedeki adresle kayıt olan kişi rolü otomatik almalı.
+insert into public.pending_role_grants (email, role, note)
+values ('yeni-yonetici@example.com', 'admin', 'test');
+
+insert into auth.users (id, email) values ('a0000000-0000-0000-0000-0000000000aa', 'yeni-yonetici@example.com');
+
+select pg_temp.assert_eq(
+  (select count(*)::int from public.user_roles
+   where user_id = 'a0000000-0000-0000-0000-0000000000aa' and role = 'admin'),
+  1, 'listedeki adres kayıt olunca yönetici oldu');
+
+-- Büyük/küçük harf farkı engel olmamalı (citext).
+insert into public.pending_role_grants (email, role) values ('KaRiSiK@Example.COM', 'editor');
+insert into auth.users (id, email) values ('a0000000-0000-0000-0000-0000000000bb', 'karisik@example.com');
+
+select pg_temp.assert_eq(
+  (select count(*)::int from public.user_roles
+   where user_id = 'a0000000-0000-0000-0000-0000000000bb' and role = 'editor'),
+  1, 'e-posta eşleşmesi harf duyarsız');
+
+-- Listede olmayan kayıt rol almamalı.
+insert into auth.users (id, email) values ('a0000000-0000-0000-0000-0000000000cc', 'sirada-yok@example.com');
+
+select pg_temp.assert_eq(
+  (select count(*)::int from public.user_roles
+   where user_id = 'a0000000-0000-0000-0000-0000000000cc'),
+  0, 'listede olmayan kullanıcı rol almadı');
+
+-- Kişi önce kayıt olduysa, listeye sonradan eklenince geriye dönük uygulanır.
+insert into public.pending_role_grants (email, role) values ('sirada-yok@example.com', 'editor');
+select public.apply_pending_role_grants();
+select pg_temp.assert_eq(
+  (select count(*)::int from public.user_roles
+   where user_id = 'a0000000-0000-0000-0000-0000000000cc' and role = 'editor'),
+  1, 'sonradan listeye eklenen mevcut kullanıcıya da uygulandı');
+
+-- Tekrar çalıştırmak çift kayıt üretmemeli.
+select public.apply_pending_role_grants();
+select pg_temp.assert_eq(
+  (select count(*)::int from public.user_roles
+   where user_id = 'a0000000-0000-0000-0000-0000000000cc'),
+  1, 'tekrar uygulama çift kayıt üretmiyor');
+
+-- Liste yalnızca yöneticilere görünmeli.
+select pg_temp.assert(
+  not has_table_privilege('anon', 'public.pending_role_grants', 'select'),
+  'anon bekleyen yetki listesini okuyamaz');
+
+delete from auth.users where id in ('a0000000-0000-0000-0000-0000000000aa',
+                                    'a0000000-0000-0000-0000-0000000000bb',
+                                    'a0000000-0000-0000-0000-0000000000cc');
+delete from public.pending_role_grants
+where email in ('yeni-yonetici@example.com', 'KaRiSiK@Example.COM', 'sirada-yok@example.com');
+
 do $$ begin raise notice ''; raise notice 'TÜM ŞEMA TESTLERİ GEÇTİ'; end $$;

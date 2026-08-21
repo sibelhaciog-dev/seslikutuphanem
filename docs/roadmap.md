@@ -104,7 +104,9 @@ Supabase projesi: **kutuphanem** (`ygaxtmuzhnntzdcltmgn`).
 - [ ] Auth akışını tarayıcıdan uçtan uca dene (kayıt → e-posta → onboarding)
 - [ ] Vercel'e bağla, ortam değişkenlerini gir
 - [ ] Supabase Redirect URL listesine üretim adresini ekle
-- [ ] İlk yöneticiyi ata (`user_roles`) — kullanıcı oluştuktan sonra
+- [x] İlk yöneticiler ayarlandı — `pending_role_grants` listesinde
+      `sibelhaciog@gmail.com` ve `mehmet@nekovix.com`; kayıt olur olmaz
+      yönetici olacaklar
 - [ ] Depolama kovalarını ve boyut sınırlarını doğrula
 
 ## Sonraki sürüm için fikirler (kapsam dışı)

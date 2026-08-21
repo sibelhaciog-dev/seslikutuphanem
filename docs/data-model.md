@@ -45,22 +45,23 @@ erDiagram
 
 ## 2. Migration dosyaları
 
-| Dosya                     | Kurduğu                                                                                                                                      |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0001_foundation`         | Uzantılar, arama yapılandırması, enum'lar, `set_updated_at`, `slugify`, `build_search_query`                                                 |
-| `0002_roles`              | `user_roles`, `is_staff()`, `is_admin()`                                                                                                     |
-| `0003_taxonomy`           | `development_areas`, `development_topics`, `interests`                                                                                       |
-| `0004_catalog`            | `publishers`, `people`, `series`, `books`, ilişki tabloları, arama vektörü tetikleyicileri                                                   |
-| `0005_accounts`           | `profiles`, `children`, `child_interests`, `child_focus_topics`, `owns_child()`                                                              |
-| `0006_library`            | `custom_books`, `library_items`, `reading_sessions`, `reading_notes`, `achievements`, `child_achievements`, türetme ve başarım fonksiyonları |
-| `0007_community`          | `feedback`, `donation_organizations`, `donation_requests`, `exchange_listings`                                                               |
-| `0008_storage`            | `catalog-covers` ve `user-covers` kovaları + politikaları                                                                                    |
-| `0009_views`              | `catalog_books`, `book_details`, `child_reading_stats`                                                                                       |
-| `0010_ai_usage`           | `ai_usage_events`, `ai_quota_remaining()`                                                                                                    |
-| `0011_grants`             | Tablo bazlı `GRANT`'ler (RLS tek başına yetmez — aşağıya bakın)                                                                              |
-| `0012_trigger_privileges` | Türetilmiş alan tetikleyicilerini `security definer` yapar                                                                                   |
-| `0013_function_hardening` | `search_path` sabitleme + iç fonksiyonları REST yüzeyinden çıkarma                                                                           |
-| `0014_rls_performance`    | Politikalarda InitPlan optimizasyonu, `FOR ALL` ayrıştırma, FK indeksleri                                                                    |
+| Dosya                      | Kurduğu                                                                                                                                      |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0001_foundation`          | Uzantılar, arama yapılandırması, enum'lar, `set_updated_at`, `slugify`, `build_search_query`                                                 |
+| `0002_roles`               | `user_roles`, `is_staff()`, `is_admin()`                                                                                                     |
+| `0003_taxonomy`            | `development_areas`, `development_topics`, `interests`                                                                                       |
+| `0004_catalog`             | `publishers`, `people`, `series`, `books`, ilişki tabloları, arama vektörü tetikleyicileri                                                   |
+| `0005_accounts`            | `profiles`, `children`, `child_interests`, `child_focus_topics`, `owns_child()`                                                              |
+| `0006_library`             | `custom_books`, `library_items`, `reading_sessions`, `reading_notes`, `achievements`, `child_achievements`, türetme ve başarım fonksiyonları |
+| `0007_community`           | `feedback`, `donation_organizations`, `donation_requests`, `exchange_listings`                                                               |
+| `0008_storage`             | `catalog-covers` ve `user-covers` kovaları + politikaları                                                                                    |
+| `0009_views`               | `catalog_books`, `book_details`, `child_reading_stats`                                                                                       |
+| `0010_ai_usage`            | `ai_usage_events`, `ai_quota_remaining()`                                                                                                    |
+| `0011_grants`              | Tablo bazlı `GRANT`'ler (RLS tek başına yetmez — aşağıya bakın)                                                                              |
+| `0012_trigger_privileges`  | Türetilmiş alan tetikleyicilerini `security definer` yapar                                                                                   |
+| `0013_function_hardening`  | `search_path` sabitleme + iç fonksiyonları REST yüzeyinden çıkarma                                                                           |
+| `0014_rls_performance`     | Politikalarda InitPlan optimizasyonu, `FOR ALL` ayrıştırma, FK indeksleri                                                                    |
+| `0015_pending_role_grants` | E-posta bazlı ön yetki listesi; kayıt olunca rol otomatik verilir                                                                            |
 
 Sıralı çalıştırılır; hiçbiri kendinden sonrakine atıfta bulunmaz.
 
@@ -194,6 +195,28 @@ Bilinçli olarak açık bırakılanlar: `is_staff()`, `is_admin()`, `owns_child(
 politika ifadesi sorgulayan rolün yetkisiyle değerlendirildiği için EXECUTE
 geri alınırsa katalog sayfası komple kırılır. Üçü de yalnızca çağıranın kendi
 durumunu döndürür.
+
+### İlk yöneticiyi atamak
+
+Yeni bir projede tavuk-yumurta sorunu var: yönetim arayüzüne girmek için
+yönetici olmak, yönetici olmak için de birinin `user_roles`'a satır eklemesi
+gerekiyor. `pending_role_grants` bunu çözer — tabloya e-posta yazılır, o
+adresle kayıt olan kişiye rol **kayıt anında** verilir (`0015`).
+
+Sıra önemli değil: kişi listeye eklenmeden önce kayıt olduysa
+`apply_pending_role_grants()` geriye dönük uygular. Fonksiyon idempotenttir.
+
+```sql
+insert into public.pending_role_grants (email, role, note)
+values ('birisi@ornek.com', 'editor', 'İçerik editörü');
+select public.apply_pending_role_grants();   -- zaten kayıtlıysa
+```
+
+Tabloyu yalnızca yöneticiler görebilir. Bir tuzak var: `auth.users.email`
+`text` tipinde, tablodaki `email` ise `citext`. `citext = text`
+karşılaştırmasında PostgreSQL citext'i text'e çevirmeyi tercih eder (o yön
+örtük cast) ve eşleşme harf duyarlı olur. Bu yüzden karşılaştırma
+`u.email::extensions.citext` diye açıkça yazılmıştır.
 
 ### Politikalarda InitPlan
 

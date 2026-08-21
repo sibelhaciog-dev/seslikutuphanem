@@ -899,6 +899,27 @@ export interface Database {
           },
         ]
       }
+      pending_role_grants: {
+        Row: {
+          email: string
+          role: 'member' | 'editor' | 'admin'
+          note: string | null
+          created_at: string
+        }
+        Insert: {
+          email: string
+          role?: 'member' | 'editor' | 'admin'
+          note?: string | null
+          created_at?: string
+        }
+        Update: {
+          email?: string
+          role?: 'member' | 'editor' | 'admin'
+          note?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       people: {
         Row: {
           id: string
@@ -1232,6 +1253,12 @@ export interface Database {
           target_feature: string
           window_hours: number
           quota: number
+        }
+        Returns: number
+      }
+      apply_pending_role_grants: {
+        Args: {
+          target_user_id: unknown
         }
         Returns: number
       }

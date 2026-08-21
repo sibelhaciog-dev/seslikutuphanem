@@ -1,11 +1,13 @@
 /**
  * İçerik dosyalarını veritabanına aktarır (ADR 0002).
  *
- *   DATABASE_URL=postgres://… npm run db:sync
- *   DATABASE_URL=…            npm run db:sync -- --prune
+ *   npm run db:sync
+ *   npm run db:sync -- --prune
  *
- * `DATABASE_URL`, Supabase panelinde Project Settings → Database → Connection
- * string (URI) değeridir. Yerel testte `npm run db:sync:local` kullanılır.
+ * `DATABASE_URL` `.env.local` veya `.env` dosyasından okunur; satır içinde de
+ * verilebilir ve o zaman dosyadakinin önüne geçer. Değer, Supabase panelinde
+ * Project Settings → Database → Connection string (URI) altındadır.
+ * Yerel testte `npm run db:sync:local` kullanılır.
  *
  * Betik idempotenttir: slug üzerinden upsert eder, defalarca çalıştırılabilir.
  * `--prune` verilirse içerik dosyalarında olmayan katalog kayıtları arşivlenir.
@@ -13,6 +15,9 @@
 import { Client } from 'pg'
 import { checkContentConsistency } from '../src/lib/content/schema'
 import { loadAllContent } from '../src/lib/content/load'
+import { loadEnvFiles } from './lib/env'
+
+loadEnvFiles()
 
 const PRUNE = process.argv.includes('--prune')
 
@@ -20,7 +25,9 @@ function requireConnectionString(): string {
   const value = process.env.DATABASE_URL
   if (!value) {
     console.error('DATABASE_URL tanımlı değil.')
-    console.error('Supabase → Project Settings → Database → Connection string (URI)')
+    console.error('`.env.local` dosyasına ekleyin ya da komutun başında verin:')
+    console.error('  DATABASE_URL="postgresql://…" npm run db:sync')
+    console.error('Değer: Supabase → Project Settings → Database → Connection string (URI)')
     process.exit(1)
   }
   return value

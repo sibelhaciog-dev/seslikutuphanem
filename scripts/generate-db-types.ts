@@ -3,14 +3,19 @@
  *
  * Supabase CLI'ye erişim olmadığı için introspection'ı kendimiz yapıyoruz.
  * Kaynak, `DATABASE_URL` ile gösterilen veritabanıdır — yerel Docker da olur,
- * Supabase de. Böylece tipler şemadan asla sapmaz.
+ * Supabase de. Böylece tipler şemadan asla sapmaz. Değişken `.env.local` veya
+ * `.env` dosyasından okunur; satır içinde verilirse o öne geçer.
  */
 import { writeFileSync } from 'node:fs'
 import { Client } from 'pg'
+import { loadEnvFiles } from './lib/env'
+
+loadEnvFiles()
 
 const connectionString = process.env.DATABASE_URL
 if (!connectionString) {
   console.error('DATABASE_URL tanımlı değil.')
+  console.error('`.env.local` dosyasına ekleyin ya da komutun başında verin.')
   process.exit(1)
 }
 

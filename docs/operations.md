@@ -25,11 +25,17 @@ npm run dev                    # http://localhost:3000
 > `DATABASE_URL` tüm veriye erişir ve RLS'i baypas eder. Vercel'e **eklemeyin**;
 > yalnızca `npm run db:sync` ve `npm run db:types` için yerelde bulunsun.
 
+`db:sync` ve `db:types` betikleri `.env.local` ve `.env` dosyalarını kendisi
+okur — ayrıca `export` etmeye gerek yok. Öncelik sırası Next.js ile aynı:
+komut satırında verilen değişken > `.env.local` > `.env`. Bu sıralama
+bilinçli: `npm run db:sync:local` bağlantıyı satır içinde verdiği için
+`.env.local` üretime bakarken bile yerel veritabanına yazar.
+
 ## 3. Veritabanını kurma (yeni proje)
 
 1. Supabase'de yeni proje aç.
 2. **SQL Editor** → `supabase/migrations/` altındaki dosyaları **sırayla**
-   (0001 → 0014) yapıştırıp çalıştır.
+   (0001 → 0015) yapıştırıp çalıştır.
 3. İçeriği yükle. İki yol var:
 
    **a) Veritabanı parolası varsa** — tek komut:
@@ -49,11 +55,15 @@ npm run dev                    # http://localhost:3000
    sonrası sayıları doğrulayın: 196 kitap, 451 `book_topics`, 141
    `book_interests`.
 
-4. Kendine editör yetkisi ver (SQL Editor'de):
+4. Yönetici olacak kişileri ön yetki listesine ekle. Bu kişiler kayıt olur
+   olmaz yönetici olur; kayıt sırasını beklemek gerekmez:
+
    ```sql
-   insert into public.user_roles (user_id, role)
-   select id, 'admin' from auth.users where email = 'senin@eposta.com';
+   insert into public.pending_role_grants (email, role, note)
+   values ('senin@eposta.com', 'admin', 'Kurucu');
+   select public.apply_pending_role_grants();   -- zaten kayıtlıysa geriye dönük uygular
    ```
+
 5. **Authentication → URL Configuration → Redirect URLs** listesine
    `https://<siteniz>/auth/callback` ekle.
 
