@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { AvatarFigure } from '@/components/avatar/AvatarFigure'
+import { DiscoveryFrame } from '@/components/discovery/DiscoveryFrame'
 import { BookCard } from '@/components/books/BookCard'
 import { GuidePanel } from '@/components/books/GuidePanel'
 import { useAppData } from '@/components/providers/AppDataProvider'
@@ -10,10 +11,11 @@ import { Chip } from '@/components/ui/Chip'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { AGE_BANDS, ageOf } from '@/lib/age'
+import type { DiscoveryMode } from '@/lib/data/discovery'
 import type { CatalogBook } from '@/lib/data/types'
 import { DEFAULT_FILTERS, filterBooks, hasActiveFilters, type CatalogFilters } from '@/lib/filters'
 
-export function CatalogView({ books }: { books: CatalogBook[] }) {
+export function CatalogView({ books, modes }: { books: CatalogBook[]; modes: DiscoveryMode[] }) {
   const { activeChild, library, taxonomy, toggleFavorite, setRating } = useAppData()
   const toast = useToast()
   const [filters, setFilters] = useState<CatalogFilters>(DEFAULT_FILTERS)
@@ -51,6 +53,10 @@ export function CatalogView({ books }: { books: CatalogBook[] }) {
       <GuidePanel value={filters.topicSlug} onChange={(topicSlug) => patch({ topicSlug })} />
 
       <div className="min-w-0 flex-1">
+        <div className="mb-6">
+          <DiscoveryFrame modes={modes} />
+        </div>
+
         <section className="mb-6 rounded-panel border border-line bg-white p-5">
           <div className="flex flex-wrap items-center gap-4">
             {activeChild && (

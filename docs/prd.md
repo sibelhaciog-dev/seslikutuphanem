@@ -146,13 +146,14 @@ kişiselleştirilebilir bir rehbere dönüştürür; üstüne okuma takibi ekler
 
 ## 7. Başarı ölçütleri
 
-| Ölçüt                                                           | Hedef |
-| --------------------------------------------------------------- | ----- |
-| Kayıt olan ebeveynin onboarding'i tamamlaması                   | %70   |
-| Onboarding sonrası ilk hafta içinde en az 1 kitap işaretlenmesi | %50   |
-| Kayıtlı kullanıcının 30 gün sonra geri dönmesi                  | %30   |
-| Katalog arama sonrası kitap sayfası açılması                    | %40   |
-| Kapak tarama denemesinin başarıyla kitap tanıması               | %85   |
+| Ölçüt                                                            | Hedef |
+| ---------------------------------------------------------------- | ----- |
+| Kayıt olan ebeveynin onboarding'i tamamlaması                    | %70   |
+| Onboarding sonrası ilk hafta içinde en az 1 kitap işaretlenmesi  | %50   |
+| Kayıtlı kullanıcının 30 gün sonra geri dönmesi                   | %30   |
+| Katalog arama sonrası kitap sayfası açılması                     | %40   |
+| Kapak tarama denemesinin başarıyla kitap tanıması                | %85   |
+| Keşif çerçevesinden öneri alan kullanıcının kitap sayfası açması | %50   |
 
 ## 8. Kısıtlar ve bilinen gerçekler
 

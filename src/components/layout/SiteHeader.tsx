@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { INSTAGRAM_URL } from '@/lib/site'
 
 const MENU_ITEMS: { href: string; label: string; external?: boolean }[] = [
+  { href: '/kesif', label: '✨ Kitap keşfi' },
   { href: '/rapor', label: '📊 Okuma raporu' },
   { href: '/takvim', label: '📅 Okuma takvimi' },
   { href: '/takas', label: '🔄 Kitap takası' },

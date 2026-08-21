@@ -5,6 +5,7 @@ import type { Database } from './database.types'
 
 /** Giriş yapılmadan açılamayacak sayfalar. */
 const PROTECTED_PREFIXES = [
+  '/kesif',
   '/kutuphanem',
   '/onboarding',
   '/profil',

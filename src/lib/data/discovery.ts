@@ -85,3 +85,68 @@ export async function loadDiscoveryMode(
 export function toWeightRecord(weights: ModeWeight[]): Record<string, number> {
   return Object.fromEntries(weights.map((entry) => [entry.slug, entry.weight]))
 }
+
+// ─── Öneri geçmişi (0019) ───────────────────────────────────────────────────
+
+export interface RecommendationPick {
+  kitapId: string
+  slug: string
+  baslik: string
+  gerekce: string
+}
+
+export interface RecommendationRun {
+  id: string
+  childId: string | null
+  mode: string | null
+  prompt: string | null
+  source: 'ai' | 'deterministic'
+  picks: RecommendationPick[]
+  createdAt: string
+}
+
+/** `results` jsonb'si güvenle okunur: eski kayıtlar farklı biçimde olabilir. */
+function readPicks(value: unknown): RecommendationPick[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== 'object') return []
+    const row = entry as Record<string, unknown>
+    if (typeof row.slug !== 'string' || typeof row.baslik !== 'string') return []
+    return [
+      {
+        kitapId: String(row.kitapId ?? ''),
+        slug: row.slug,
+        baslik: row.baslik,
+        gerekce: typeof row.gerekce === 'string' ? row.gerekce : '',
+      },
+    ]
+  })
+}
+
+export async function loadRecommendationHistory(
+  supabase: Client,
+  limit = 20,
+): Promise<RecommendationRun[]> {
+  const { data, error } = await supabase
+    .from('ai_recommendations')
+    .select('id, child_id, mode, prompt, source, results, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw new Error(`Öneri geçmişi okunamadı: ${error.message}`)
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    childId: row.child_id,
+    mode: row.mode,
+    prompt: row.prompt,
+    source: row.source,
+    picks: readPicks(row.results),
+    createdAt: row.created_at,
+  }))
+}
+
+export async function deleteRecommendationRun(supabase: Client, id: string): Promise<void> {
+  const { error } = await supabase.from('ai_recommendations').delete().eq('id', id)
+  if (error) throw error
+}
