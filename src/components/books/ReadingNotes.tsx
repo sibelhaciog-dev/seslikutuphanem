@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { cn } from '@/lib/cn'
+import { formatShortDate } from '@/lib/dates'
 import { addNote, deleteNote, loadNotes } from '@/lib/data/library'
 import type { NoteVisibility, ReadingNote } from '@/lib/data/types'
 import { NOTE_VISIBILITY_LABELS } from '@/lib/labels'
@@ -128,7 +129,7 @@ export function ReadingNotes({ libraryItemId }: { libraryItemId: string }) {
             >
               <div className="mb-1.5 flex items-center justify-between gap-2">
                 <span className="text-[11px] text-muted">
-                  {new Date(note.createdAt).toLocaleDateString('tr-TR')}
+                  {formatShortDate(note.createdAt)}
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-bold text-muted">

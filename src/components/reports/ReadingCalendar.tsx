@@ -7,6 +7,7 @@ import { Button, ButtonLink } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { StarRating } from '@/components/ui/StarRating'
 import { cn } from '@/lib/cn'
+import { formatWeekday } from '@/lib/dates'
 import type { CatalogBook } from '@/lib/data/types'
 import { groupSessionsByDate, longestStreak } from '@/lib/stats'
 
@@ -145,11 +146,7 @@ export function ReadingCalendar({ books }: { books: CatalogBook[] }) {
       {selected && selectedBooks.length > 0 && (
         <section className="mt-4 rounded-panel border border-line bg-white p-5">
           <h2 className="mb-3 font-serif text-base">
-            {new Date(`${selected}T12:00:00`).toLocaleDateString('tr-TR', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
+            {formatWeekday(selected)}
           </h2>
           <ul className="flex flex-col gap-2">
             {selectedBooks.map((book) => (

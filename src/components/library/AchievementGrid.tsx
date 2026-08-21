@@ -3,6 +3,7 @@
 import { useAppData } from '@/components/providers/AppDataProvider'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
+import { formatShortDate } from '@/lib/dates'
 
 /** Kazanılan ve henüz kilitli başarımlar. */
 export function AchievementGrid() {
@@ -39,7 +40,7 @@ export function AchievementGrid() {
               <p className="mt-1 text-[11px] leading-snug text-muted">{achievement.description}</p>
               {unlocked && achievement.earnedAt && (
                 <p className="mt-1.5 text-[10px] font-semibold text-accent">
-                  {new Date(achievement.earnedAt).toLocaleDateString('tr-TR')} · +
+                  {formatShortDate(achievement.earnedAt)} · +
                   {achievement.points} puan
                 </p>
               )}

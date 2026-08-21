@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { cn } from '@/lib/cn'
+import { formatShortDate } from '@/lib/dates'
 import { FEEDBACK_TOPIC_LABELS } from '@/lib/labels'
 import { createClient } from '@/lib/supabase/client'
 
@@ -55,7 +56,7 @@ export function AdminFeedbackList({ items }: { items: FeedbackItem[] }) {
               {FEEDBACK_TOPIC_LABELS[item.topic] ?? item.topic}
             </span>
             <span className="text-[11px] text-muted">
-              {new Date(item.created_at).toLocaleDateString('tr-TR')}
+              {formatShortDate(item.created_at)}
             </span>
           </div>
 

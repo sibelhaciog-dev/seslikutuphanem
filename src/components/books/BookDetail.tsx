@@ -9,6 +9,7 @@ import { Button, ButtonLink } from '@/components/ui/Button'
 import { StarRating } from '@/components/ui/StarRating'
 import { useToast } from '@/components/ui/Toast'
 import { cn } from '@/lib/cn'
+import { formatShortDate } from '@/lib/dates'
 import type { BookDetail as BookDetailType, CatalogBook, LibraryStatus } from '@/lib/data/types'
 import {
   ageLabel,
@@ -187,7 +188,7 @@ export function BookDetail({ book, catalog }: { book: BookDetailType; catalog: C
               <p className="mt-3 text-xs text-muted">
                 {item.timesRead} kez okundu
                 {item.lastReadAt &&
-                  ` · son okuma ${new Date(`${item.lastReadAt}T12:00:00`).toLocaleDateString('tr-TR')}`}
+                  ` · son okuma ${formatShortDate(`${item.lastReadAt}T12:00:00`)}`}
               </p>
             )}
           </section>

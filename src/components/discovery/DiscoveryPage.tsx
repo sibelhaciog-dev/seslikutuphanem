@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { FormMessage } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/Toast'
 import { cn } from '@/lib/cn'
+import { formatDateTime } from '@/lib/dates'
 import {
   deleteRecommendationRun,
   type DiscoveryMode,
@@ -17,16 +18,6 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { DiscoveryResults } from './DiscoveryResults'
 import { useDiscovery } from './useDiscovery'
-
-/** Geçmiş kaydının tarihini okunur hale getirir. */
-function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString('tr-TR', {
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 export function DiscoveryPage({
   modes,
@@ -200,7 +191,7 @@ export function DiscoveryPage({
                         {entry.prompt || label || 'Genel öneri'}
                       </p>
                       <p className="mt-0.5 text-[11px] text-muted">
-                        {formatDate(entry.createdAt)}
+                        {formatDateTime(entry.createdAt)}
                         {label && entry.prompt ? ` · ${label}` : ''}
                         {` · ${entry.picks.length} kitap`}
                         {entry.source === 'deterministic' ? ' · geçmişe göre' : ''}

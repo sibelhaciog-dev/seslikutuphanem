@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { StarRating } from '@/components/ui/StarRating'
 import { useToast } from '@/components/ui/Toast'
 import type { CatalogBook } from '@/lib/data/types'
+import { formatMonth } from '@/lib/dates'
 import { ageLabel } from '@/lib/labels'
 import { recommendForChild } from '@/lib/recommendations'
 import { longestStreak, reportMessage, summarize } from '@/lib/stats'
@@ -77,7 +78,7 @@ export function ReadingReport({ books }: { books: CatalogBook[] }) {
     <div className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="mb-1 text-3xl">📊 {activeChild.name} okuma raporu</h1>
       <p className="mb-7 text-sm text-muted">
-        {new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} itibarıyla
+        {formatMonth(new Date())} itibarıyla
       </p>
 
       {summary.booksRead === 0 ? (
