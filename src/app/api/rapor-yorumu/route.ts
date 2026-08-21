@@ -7,7 +7,7 @@ import { recordUsage, remainingQuota } from '@/lib/ai/usage'
 import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
-export const maxDuration = 45
+export const maxDuration = 60
 
 const requestSchema = z.object({
   childId: z.uuid(),
@@ -120,6 +120,12 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     await recordUsage(supabase, { userId: user.id, feature: 'report_note', succeeded: false })
+    if (error instanceof AiError && error.code === 'timeout') {
+      return NextResponse.json(
+        { hata: 'Yapay zekâ şu anda yavaş yanıt veriyor. Biraz sonra tekrar deneyin.' },
+        { status: 504 },
+      )
+    }
     if (error instanceof AiError && error.code === 'invalid_response') {
       return NextResponse.json({ hata: 'Yorum üretilemedi, tekrar deneyin.' }, { status: 502 })
     }

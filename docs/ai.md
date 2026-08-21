@@ -12,12 +12,14 @@ arayüzü konuştuğu için tek satır ayar değişikliğiyle geçilebilir.
 
 ## 2. Ortam değişkenleri
 
-| Değişken          | Zorunlu   | Varsayılan                     | Açıklama               |
-| ----------------- | --------- | ------------------------------ | ---------------------- |
-| `AI_BASE_URL`     | hayır     | `https://openrouter.ai/api/v1` | OpenAI uyumlu uç nokta |
-| `AI_API_KEY`      | **evet*** | —                              | Sağlayıcı anahtarı     |
-| `AI_TEXT_MODEL`   | hayır     | `anthropic/claude-sonnet-4.5`  | Metin üretimi          |
-| `AI_VISION_MODEL` | hayır     | `google/gemini-2.5-flash`      | Görsel tanıma          |
+| Değişken               | Zorunlu   | Varsayılan                     | Açıklama                                           |
+| ---------------------- | --------- | ------------------------------ | -------------------------------------------------- |
+| `AI_BASE_URL`          | hayır     | `https://openrouter.ai/api/v1` | OpenAI uyumlu uç nokta                             |
+| `AI_API_KEY`           | **evet*** | —                              | Sağlayıcı anahtarı                                 |
+| `AI_TEXT_MODEL`        | hayır     | `anthropic/claude-sonnet-4.5`  | Metin üretimi                                      |
+| `AI_VISION_MODEL`      | hayır     | `google/gemini-2.5-flash`      | Görsel tanıma                                      |
+| `AI_STRUCTURED_OUTPUT` | hayır     | `auto`                         | `auto` \| `json_schema` \| `json_object` \| `none` |
+| `AI_BUDGET_MS`         | hayır     | `35000`                        | Bir isteğe ayrılan toplam süre                     |
 
 \* Tanımlı değilse yapay zekâ özellikleri kapanır (`aiEnabled()` false döner),
 uygulamanın geri kalanı normal çalışır. Uçlar 503 döner, arayüz butonu gizler.
@@ -49,14 +51,53 @@ Her durumda yanıt markdown çitlerinden temizlenir, `JSON.parse` edilir ve
 
 ```mermaid
 flowchart TD
-    a["generateJson(schema)"] --> b["json_schema dene"]
+    a["generateJson(schema)"] --> z{"bütçe kaldı mı?"}
+    z -->|hayır| t["AiError('timeout')"]
+    z -->|evet| b["json_schema dene"]
     b -->|400/404/422| c["json_object dene"]
     c -->|400/404/422| d["biçimsiz dene"]
     b & c & d --> e["çitleri temizle + JSON.parse"]
     e --> f{"Zod doğrular mı?"}
     f -->|evet| g["tipli veri"]
-    f -->|hayır| h["AiError('invalid_response')"]
+    f -->|hayır| z
 ```
+
+### Zaman bütçesi
+
+Kademeler SIRAYLA deneniyor, yani bir kullanıcı isteği birden çok sağlayıcı
+çağrısı demek. Bu, üretimde 504'e yol açtı:
+
+| Ayar               | Eski  | Yeni        |
+| ------------------ | ----- | ----------- |
+| Rota `maxDuration` | 45 sn | 60 sn       |
+| İstek bütçesi      | yok   | 35 sn       |
+| Çağrı zaman aşımı  | 45 sn | kalan bütçe |
+| SDK `maxRetries`   | 2     | 0           |
+
+Eskiden her çağrıya ayrı ayrı 45 sn veriliyordu ve SDK bunları 2 kez daha
+deniyordu: en kötü ihtimalle 3 kademe × 3 deneme = **9 çağrı**. Rota sınırı
+da 45 sn olduğu için fonksiyon, istemci zaman aşımından ÖNCE ölüyordu —
+kullanıcı düzgün bir hata yerine 504 alıyordu.
+
+Artık istek başına tek bütçe var; her kademe kalan süreyi alır, bütçe
+biterse `AiError('timeout')` döner ve uç 504 yerine anlaşılır bir Türkçe
+mesaj verir. `maxDuration` bütçeden bilerek büyük: cevabı hep biz veriyoruz.
+
+### Desteklenmeyen biçimi hatırlama
+
+Model `json_schema`'yı reddederse (400/404/422) bu, süreç ömrü boyunca
+hatırlanır ve bir daha denenmez. Aksi halde her istek boşa bir tur atar.
+Modelin desteğini biliyorsanız `AI_STRUCTURED_OUTPUT` ile kademeyi doğrudan
+atlayabilirsiniz — en hızlısı budur.
+
+### Model seçerken dikkat
+
+- **Akıl yürüten ("reasoning") modeller:** düşünme jetonları `max_tokens`
+  bütçesinden yenir; sınır düşükse `content` BOŞ döner. Kademe boşuna
+  ilerler. Belirti: `finish_reason: "length"` ve boş içerik. Çözüm:
+  `max_tokens` yükseltin ya da akıl yürütmeyen bir model seçin.
+- **Yapılandırılmış çıktı desteği:** her model `json_schema` desteklemiyor.
+  Desteklemeyen bir modelde `auto` her istekte bir kademe israf eder.
 
 ## 5. Güvenlik ve maliyet
 

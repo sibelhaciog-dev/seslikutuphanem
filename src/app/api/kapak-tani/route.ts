@@ -8,7 +8,7 @@ import { aiEnabled } from '@/lib/ai/config'
 import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
-export const maxDuration = 45
+export const maxDuration = 60
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024
 
@@ -91,6 +91,12 @@ export async function POST(request: Request) {
   } catch (error) {
     await recordUsage(supabase, { userId: user.id, feature: 'cover_scan', succeeded: false })
 
+    if (error instanceof AiError && error.code === 'timeout') {
+      return NextResponse.json(
+        { hata: 'Yapay zekâ şu anda yavaş yanıt veriyor. Biraz sonra tekrar deneyin.' },
+        { status: 504 },
+      )
+    }
     if (error instanceof AiError && error.code === 'invalid_response') {
       return NextResponse.json(
         { hata: 'Kitap bilgisi okunamadı, tekrar deneyin.' },
