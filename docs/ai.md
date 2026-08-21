@@ -90,6 +90,22 @@ hatırlanır ve bir daha denenmez. Aksi halde her istek boşa bir tur atar.
 Modelin desteğini biliyorsanız `AI_STRUCTURED_OUTPUT` ile kademeyi doğrudan
 atlayabilirsiniz — en hızlısı budur.
 
+### Sağlayıcı hataları
+
+| Durum          | `AiError.code`     | Uç  | Kullanıcı ne görür                                  |
+| -------------- | ------------------ | --- | --------------------------------------------------- |
+| 429            | `rate_limited`     | 429 | "Servis şu anda yoğun, birkaç dakika sonra deneyin" |
+| 401/402/403    | `unauthorized`     | 503 | "Bu özellik şu anda kullanılamıyor"                 |
+| zaman aşımı    | `timeout`          | 504 | "Yavaş yanıt veriyor, biraz sonra deneyin"          |
+| şemaya uymayan | `invalid_response` | 502 | "Üretilemedi, tekrar deneyin"                       |
+
+429 ve 401/402/403 kalıcı durumlar; kademe değiştirmek çözmez, o yüzden
+hemen çıkılır. **429 kullanıcının kendi günlük kotasıyla karıştırılmamalı** —
+kota da 429 döner ama mesajı farklıdır ve `ai_usage_events` sayımından gelir.
+
+Başarısız çağrılar kotadan düşmez: `ai_quota_remaining` yalnızca
+`succeeded` satırları sayar.
+
 ### Model seçerken dikkat
 
 - **Akıl yürüten ("reasoning") modeller:** düşünme jetonları `max_tokens`

@@ -34,7 +34,13 @@ import { readAiConfig, type AiConfig } from './config'
 export class AiError extends Error {
   constructor(
     message: string,
-    readonly code: 'disabled' | 'invalid_response' | 'provider_error' | 'timeout',
+    readonly code:
+      | 'disabled'
+      | 'invalid_response'
+      | 'provider_error'
+      | 'timeout'
+      | 'rate_limited'
+      | 'unauthorized',
   ) {
     super(message)
     this.name = 'AiError'
@@ -142,6 +148,27 @@ function isFormatRejection(error: unknown): boolean {
   return status === 400 || status === 404 || status === 422
 }
 
+/**
+ * Sağlayıcı tarafındaki kalıcı durumlar. Kademe değiştirmek bunları çözmez,
+ * bu yüzden hemen ve ayırt edilebilir bir hatayla çıkıyoruz.
+ *
+ * 429: sağlayıcı hız sınırı (bizim kullanıcı kotamızdan farklı).
+ * 401/402/403: anahtar geçersiz ya da kredi yok — yapılandırma sorunu.
+ */
+function providerStatusError(error: unknown): AiError | null {
+  const status = (error as { status?: number }).status
+  if (status === 429) {
+    return new AiError('Sağlayıcı hız sınırına takıldı (429).', 'rate_limited')
+  }
+  if (status === 401 || status === 402 || status === 403) {
+    return new AiError(
+      `Sağlayıcı isteği reddetti (${status}): anahtar geçersiz ya da kredi yetersiz.`,
+      'unauthorized',
+    )
+  }
+  return null
+}
+
 function isTimeout(error: unknown): boolean {
   if (error instanceof OpenAI.APIUserAbortError) return true
   const name = (error as { name?: string }).name
@@ -220,6 +247,9 @@ export async function generateJson<T extends z.ZodType>({
       if (isTimeout(error)) {
         throw new AiError('Model zamanında yanıt vermedi.', 'timeout')
       }
+
+      const statusError = providerStatusError(error)
+      if (statusError) throw statusError
 
       if (isFormatRejection(error)) {
         // Bu model bu biçimi desteklemiyor; bir daha denemeyelim.

@@ -169,6 +169,20 @@ describe('generateJson', () => {
     expect(requestAt(0).response_format?.type).toBe('json_object')
   })
 
+  // Sağlayıcı 429/402 dönerse kademe değiştirmek çözmez; hemen ve
+  // ayırt edilebilir bir hatayla çıkmalı ki rota doğru mesajı gösterebilsin.
+  it('sağlayıcı hız sınırını (429) ayırt eder ve kademe denemez', async () => {
+    createMock.mockRejectedValue(rejection(429))
+    await expect(callGenerate()).rejects.toMatchObject({ code: 'rate_limited' })
+    expect(createMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('anahtar/kredi hatasını (402) ayırt eder', async () => {
+    createMock.mockRejectedValue(rejection(402))
+    await expect(callGenerate()).rejects.toMatchObject({ code: 'unauthorized' })
+    expect(createMock).toHaveBeenCalledTimes(1)
+  })
+
   it('yapılandırma yoksa kapalı hatası verir', async () => {
     delete process.env.AI_API_KEY
     await expect(callGenerate()).rejects.toMatchObject({ code: 'disabled' })

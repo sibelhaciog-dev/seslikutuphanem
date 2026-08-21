@@ -120,6 +120,19 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     await recordUsage(supabase, { userId: user.id, feature: 'report_note', succeeded: false })
+    if (error instanceof AiError && error.code === 'rate_limited') {
+      return NextResponse.json(
+        { hata: 'Yapay zekâ servisi şu anda yoğun. Birkaç dakika sonra tekrar deneyin.' },
+        { status: 429 },
+      )
+    }
+    if (error instanceof AiError && error.code === 'unauthorized') {
+      // Yapılandırma sorunu: kullanıcının yapabileceği bir şey yok.
+      return NextResponse.json(
+        { hata: 'Bu özellik şu anda kullanılamıyor.' },
+        { status: 503 },
+      )
+    }
     if (error instanceof AiError && error.code === 'timeout') {
       return NextResponse.json(
         { hata: 'Yapay zekâ şu anda yavaş yanıt veriyor. Biraz sonra tekrar deneyin.' },
