@@ -17,7 +17,7 @@ flowchart TB
     subgraph vercel["Vercel"]
         rsc["Sunucu bileşenleri<br/>katalog · kitap sayfası · yönetim"]
         client["İstemci bileşenleri<br/>filtreler · kütüphane · formlar"]
-        api["API uçları<br/>/api/kapak-tani · /api/rapor-yorumu"]
+        api["API uçları<br/>/api/kapak-tani · /api/rapor-yorumu · /api/oneri"]
         mw["Middleware<br/>oturum tazeleme · rota koruması"]
     end
 
