@@ -64,6 +64,7 @@ erDiagram
 | `0015_pending_role_grants` | E-posta bazlı ön yetki listesi; kayıt olunca rol otomatik verilir                                                                            |
 | `0016_child_birth_date`    | Doğum tarihi kısıtı gevşetildi; 18 yaş kuralı forma taşındı                                                                                  |
 | `0017_reading_stats_lock`  | Okuma sayacı yarış durumu: sayım öncesi `for no key update`                                                                                  |
+| `0018_platform_stats`      | Yönetim panosu sayıları; satır sızdırmadan toplam verir                                                                                      |
 
 Sıralı çalıştırılır; hiçbiri kendinden sonrakine atıfta bulunmaz.
 

@@ -1306,6 +1306,10 @@ export interface Database {
         }
         Returns: boolean
       }
+      platform_stats: {
+        Args: Record<string, never>
+        Returns: Json
+      }
       refresh_book_search_vector: {
         Args: {
           target_book_id: string

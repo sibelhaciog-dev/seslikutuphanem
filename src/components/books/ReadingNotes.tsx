@@ -11,6 +11,8 @@ import { createClient } from '@/lib/supabase/client'
 
 const VISIBILITY_ORDER: NoteVisibility[] = ['private', 'family', 'public']
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 /** Kitap notları. Varsayılan gizlilik "özel" (PRD ilke 2). */
 export function ReadingNotes({ libraryItemId }: { libraryItemId: string }) {
   const supabase = createClient()
@@ -21,6 +23,16 @@ export function ReadingNotes({ libraryItemId }: { libraryItemId: string }) {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    // Kütüphane kaydı henüz sunucuya yazılmadıysa kimliği geçici bir
+    // yer tutucudur (`optimistic-<bookId>`), gerçek bir UUID değil.
+    // Sorgulamak PostgREST'ten 400 döndürüyor ve her seferinde konsola
+    // başarısız bir istek düşüyordu. Gerçek kimlik gelince efekt yeniden
+    // çalışıyor ve notlar yükleniyor.
+    if (!UUID_PATTERN.test(libraryItemId)) {
+      setNotes([])
+      return
+    }
+
     let cancelled = false
     void loadNotes(supabase, libraryItemId)
       .then((loaded) => {

@@ -585,4 +585,57 @@ select pg_temp.assert(
 
 delete from auth.users where id = 'a0000000-0000-0000-0000-0000000000e1';
 
+-- ═══ 13. Yönetim panosu sayıları (0018) ═══════════════════════════════════
+-- Sayı görünür, satır görünmez: yönetici kaç profil olduğunu bilmeli ama
+-- çocukların adlarına erişememeli (PRD ilke 2).
+do $$ begin raise notice '── 13. Panel sayıları ──'; end $$;
+
+-- Kurulum yazımları için tam yetki gerekiyor.
+reset role;
+insert into auth.users (id, email) values
+  ('a0000000-0000-0000-0000-0000000000f1', 'panel-admin@ornek.com'),
+  ('a0000000-0000-0000-0000-0000000000f2', 'panel-uye@ornek.com');
+insert into public.user_roles (user_id, role)
+values ('a0000000-0000-0000-0000-0000000000f1', 'admin');
+insert into public.children (owner_id, name)
+values ('a0000000-0000-0000-0000-0000000000f2', 'Panel Çocuk');
+
+-- RLS yalnızca `authenticated` rolünde uygulanır; süper kullanıcı baypas eder.
+set role authenticated;
+select pg_temp.login_as('a0000000-0000-0000-0000-0000000000f1');
+select pg_temp.assert(
+  (public.platform_stats() -> 'children')::int >= 1,
+  'yönetici toplam çocuk sayısını görüyor');
+
+-- Sayıyı görmek satırları görmek değildir.
+select pg_temp.assert_eq(
+  (select count(*)::int from public.children), 0,
+  'yönetici çocuk SATIRLARINI göremiyor (yalnızca sayı)');
+
+-- Yönetici olmayan hiç çağıramamalı.
+select pg_temp.login_as('a0000000-0000-0000-0000-0000000000f2');
+do $$
+begin
+  perform public.platform_stats();
+  raise exception 'BAŞARISIZ: üye panel sayılarını okuyabildi';
+exception
+  when insufficient_privilege then
+    raise notice '  ✓ üye panel sayılarını okuyamıyor';
+end $$;
+
+set role anon;
+select pg_temp.login_as(null);
+do $$
+begin
+  perform public.platform_stats();
+  raise exception 'BAŞARISIZ: anonim panel sayılarını okuyabildi';
+exception
+  when insufficient_privilege then
+    raise notice '  ✓ anonim panel sayılarını okuyamıyor';
+end $$;
+
+reset role;
+delete from auth.users where id in ('a0000000-0000-0000-0000-0000000000f1',
+                                    'a0000000-0000-0000-0000-0000000000f2');
+
 do $$ begin raise notice ''; raise notice 'TÜM ŞEMA TESTLERİ GEÇTİ'; end $$;

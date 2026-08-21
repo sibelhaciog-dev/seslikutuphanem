@@ -145,7 +145,17 @@ export function BookExchange() {
                       {[listing.city, listing.district].filter(Boolean).join(' / ')}
                     </p>
                     {listing.isMine ? (
-                      <Button variant="danger" size="sm" onClick={() => void remove(listing.id)}>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => {
+                          // Tek yanlış tıklamayla ilan siliniyordu; geri alınamıyor.
+                          const onaylandi = window.confirm(
+                            `"${listing.title}" ilanı kaldırılacak. Bu işlem geri alınamaz. Emin misiniz?`,
+                          )
+                          if (onaylandi) void remove(listing.id)
+                        }}
+                      >
                         İlanı kaldır
                       </Button>
                     ) : (

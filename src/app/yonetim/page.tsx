@@ -6,7 +6,10 @@ export const dynamic = 'force-dynamic'
 export default async function AdminOverviewPage() {
   const supabase = await createClient()
 
-  const [books, drafts, feedback, listings, children] = await Promise.all([
+  // `children` doğrudan sayılamaz: RLS sahiple sınırlı, personel istisnası
+  // bilinçli olarak yok (bkz. 0018). Sayıyı satır döndürmeyen bir fonksiyon
+  // veriyor — yönetici kaç profil olduğunu görür, kimin olduğunu görmez.
+  const [books, drafts, feedback, listings, stats] = await Promise.all([
     supabase.from('books').select('id', { count: 'exact', head: true }).eq('status', 'published'),
     supabase.from('books').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
     supabase.from('feedback').select('id', { count: 'exact', head: true }).eq('status', 'new'),
@@ -14,15 +17,21 @@ export default async function AdminOverviewPage() {
       .from('exchange_listings')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'active'),
-    supabase.from('children').select('id', { count: 'exact', head: true }),
+    supabase.rpc('platform_stats'),
   ])
+
+  const platform = (stats.data ?? {}) as {
+    children?: number
+    parents?: number
+  }
 
   const cards = [
     { label: 'Yayındaki kitap', value: books.count ?? 0, href: '/yonetim/kitaplar' },
     { label: 'Taslak kitap', value: drafts.count ?? 0, href: '/yonetim/kitaplar?durum=draft' },
     { label: 'Yeni görüş', value: feedback.count ?? 0, href: '/yonetim/gorusler' },
     { label: 'Aktif takas ilanı', value: listings.count ?? 0, href: '/takas' },
-    { label: 'Çocuk profili', value: children.count ?? 0, href: '/yonetim' },
+    { label: 'Çocuk profili', value: platform.children ?? 0, href: '/yonetim' },
+    { label: 'Kayıtlı ebeveyn', value: platform.parents ?? 0, href: '/yonetim' },
   ]
 
   return (
