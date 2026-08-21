@@ -19,6 +19,7 @@ import {
 } from '@/lib/data/children'
 import { cn } from '@/lib/cn'
 import { loadPointsByChild } from '@/lib/data/library'
+import { toFriendlyError } from '@/lib/errors'
 import { createClient } from '@/lib/supabase/client'
 import type { Child } from '@/lib/data/types'
 
@@ -35,6 +36,7 @@ export function ProfileManager() {
   const [avatarChild, setAvatarChild] = useState<Child | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (children.length === 0) return
@@ -53,12 +55,14 @@ export function ProfileManager() {
   function openNew() {
     setValues(emptyChildForm())
     setError('')
+    setFieldErrors({})
     setEditor({ mode: 'yeni' })
   }
 
   function openEdit(child: Child) {
     setValues(childToForm(child))
     setError('')
+    setFieldErrors({})
     setEditor({ mode: 'duzenle', child })
   }
 
@@ -66,6 +70,7 @@ export function ProfileManager() {
     if (!editor || !userId) return
     setBusy(true)
     setError('')
+    setFieldErrors({})
     try {
       const supabase = createClient()
       if (editor.mode === 'yeni') {
@@ -78,8 +83,10 @@ export function ProfileManager() {
       }
       setEditor(null)
       toast.show('Profil kaydedildi.')
-    } catch {
-      setError('Kaydedilemedi. Tekrar deneyin.')
+    } catch (caught) {
+      const friendly = toFriendlyError(caught, 'Kaydedilemedi. Tekrar deneyin.')
+      if (friendly.field) setFieldErrors({ [friendly.field]: friendly.message })
+      else setError(friendly.message)
     } finally {
       setBusy(false)
     }
@@ -200,6 +207,7 @@ export function ProfileManager() {
           onSubmit={() => void save()}
           busy={busy}
           error={error}
+          fieldErrors={fieldErrors}
           submitLabel="Kaydet ✓"
         />
       </Dialog>

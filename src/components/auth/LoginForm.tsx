@@ -6,25 +6,43 @@ import { useState, type FormEvent } from 'react'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { Button } from '@/components/ui/Button'
 import { FormMessage, TextField } from '@/components/ui/Field'
+import { toFriendlyError } from '@/lib/errors'
 import { createClient } from '@/lib/supabase/client'
+import { validateEmail } from '@/lib/validation'
 
-const FRIENDLY_ERRORS: Record<string, string> = {
-  'Invalid login credentials': 'E-posta veya şifre hatalı.',
-  'Email not confirmed': 'Önce e-postandaki doğrulama bağlantısına tıklaman gerekiyor.',
+/** `auth/callback` doğrulama başarısız olunca buraya `?hata=` ile yönlendiriyor. */
+const CALLBACK_ERRORS: Record<string, string> = {
+  dogrulama:
+    'Doğrulama bağlantısı çalışmadı. Bağlantının süresi dolmuş olabilir; yeni bir tane isteyin.',
 }
 
 export function LoginForm() {
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(CALLBACK_ERRORS[searchParams.get('hata') ?? ''] ?? '')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
 
   async function submit(event: FormEvent) {
     event.preventDefault()
     setError('')
-    setBusy(true)
+    setFieldErrors({})
 
+    // Sunucuya gitmeden önce bariz eksikleri yakala: aksi halde Supabase
+    // `missing email or phone` gibi İngilizce bir metin döndürüyor.
+    const found: Record<string, string> = {}
+    const emailError = validateEmail(email)
+    if (emailError) found.email = emailError
+    const passwordError = password ? undefined : 'Şifrenizi yazın.'
+    if (passwordError) found.password = passwordError
+
+    if (Object.keys(found).length > 0) {
+      setFieldErrors(found)
+      return
+    }
+
+    setBusy(true)
     const { error: signInError } = await createClient().auth.signInWithPassword({
       email: email.trim(),
       password,
@@ -32,7 +50,14 @@ export function LoginForm() {
     setBusy(false)
 
     if (signInError) {
-      setError(FRIENDLY_ERRORS[signInError.message] ?? signInError.message)
+      const friendly = toFriendlyError(signInError, 'Giriş yapılamadı. Tekrar deneyin.')
+      // Kimlik bilgisi hataları bilerek alana bağlanmıyor: hangi alanın
+      // yanlış olduğunu söylemek hesap var mı yok mu bilgisini sızdırır.
+      if (friendly.field && friendly.field !== 'email') {
+        setFieldErrors({ [friendly.field]: friendly.message })
+      } else {
+        setError(friendly.message)
+      }
       return
     }
 
@@ -64,6 +89,7 @@ export function LoginForm() {
           autoComplete="email"
           required
           value={email}
+          error={fieldErrors.email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="ornek@mail.com"
         />
@@ -73,6 +99,7 @@ export function LoginForm() {
           autoComplete="current-password"
           required
           value={password}
+          error={fieldErrors.password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="••••••••"
         />

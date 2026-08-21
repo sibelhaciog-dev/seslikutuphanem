@@ -14,6 +14,7 @@ import {
   type ChildFormValues,
 } from '@/lib/data/children'
 import { cn } from '@/lib/cn'
+import { toFriendlyError } from '@/lib/errors'
 import { createClient } from '@/lib/supabase/client'
 
 type Step = 'sayi' | 'form' | 'ozet'
@@ -27,6 +28,7 @@ export function OnboardingWizard() {
   const [values, setValues] = useState<ChildFormValues>(emptyChildForm)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   // Profili olan kullanıcı yanlışlıkla buraya gelirse ana sayfaya yönlendir.
   useEffect(() => {
@@ -37,6 +39,7 @@ export function OnboardingWizard() {
     if (!userId) return
     setBusy(true)
     setError('')
+    setFieldErrors({})
     try {
       await createChild(createClient(), userId, values, saved.length)
       const next = [...saved, values]
@@ -46,8 +49,13 @@ export function OnboardingWizard() {
         await refreshChildren()
         setStep('ozet')
       }
-    } catch {
-      setError('Profil kaydedilemedi. Tekrar deneyin.')
+    } catch (caught) {
+      // Hatayı alanına bağla: kullanıcı neyi düzelteceğini görsün.
+      // Eskiden her şey "Profil kaydedilemedi." oluyordu ve sihirbazda
+      // ileri gitmenin başka yolu olmadığı için kullanıcı kilitleniyordu.
+      const friendly = toFriendlyError(caught, 'Profil kaydedilemedi. Tekrar deneyin.')
+      if (friendly.field) setFieldErrors({ [friendly.field]: friendly.message })
+      else setError(friendly.message)
     } finally {
       setBusy(false)
     }
@@ -118,8 +126,22 @@ export function OnboardingWizard() {
               onSubmit={() => void saveCurrent()}
               busy={busy}
               error={error}
+              fieldErrors={fieldErrors}
               submitLabel={saved.length + 1 < total ? 'Sonraki çocuk →' : 'Tamamla →'}
             />
+            {saved.length === 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setError('')
+                  setFieldErrors({})
+                  setStep('sayi')
+                }}
+                className="mt-3 w-full text-xs font-semibold text-muted hover:text-accent"
+              >
+                ← Geri dön
+              </button>
+            )}
           </>
         )}
 

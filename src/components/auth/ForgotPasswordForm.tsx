@@ -4,17 +4,28 @@ import { useState, type FormEvent } from 'react'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { Button } from '@/components/ui/Button'
 import { FormMessage, TextField } from '@/components/ui/Field'
+import { toFriendlyError } from '@/lib/errors'
 import { createClient } from '@/lib/supabase/client'
+import { validateEmail } from '@/lib/validation'
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [fieldError, setFieldError] = useState('')
   const [busy, setBusy] = useState(false)
 
   async function submit(event: FormEvent) {
     event.preventDefault()
     setError('')
+    setFieldError('')
+
+    const emailError = validateEmail(email)
+    if (emailError) {
+      setFieldError(emailError)
+      return
+    }
+
     setBusy(true)
 
     const { error: resetError } = await createClient().auth.resetPasswordForEmail(email.trim(), {
@@ -23,7 +34,9 @@ export function ForgotPasswordForm() {
     setBusy(false)
 
     if (resetError) {
-      setError(resetError.message)
+      const friendly = toFriendlyError(resetError, 'Bağlantı gönderilemedi. Tekrar deneyin.')
+      if (friendly.field === 'email') setFieldError(friendly.message)
+      else setError(friendly.message)
       return
     }
     setMessage('Şifre sıfırlama bağlantısı e-postana gönderildi.')
@@ -40,6 +53,7 @@ export function ForgotPasswordForm() {
           autoComplete="email"
           required
           value={email}
+          error={fieldError}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="ornek@mail.com"
         />

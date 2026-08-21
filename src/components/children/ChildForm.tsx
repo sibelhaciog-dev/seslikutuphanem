@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn'
 import type { ChildFormValues } from '@/lib/data/children'
 import type { Child, Gender } from '@/lib/data/types'
 import { GENDER_LABELS } from '@/lib/labels'
+import { earliestBirthDate, LIMITS, todayISO, validateBirthDate, validateText } from '@/lib/validation'
 
 export function childToForm(child: Child): ChildFormValues {
   return {
@@ -31,9 +32,14 @@ interface ChildFormProps {
   submitLabel: string
   busy?: boolean
   error?: string
+  /**
+   * Sunucudan dönen ve belirli bir alana ait olan hatalar
+   * (bkz. `toFriendlyError`). İstemci doğrulaması kaçırırsa bunlar devreye
+   * girer; böylece kullanıcı yine de hangi alanı düzelteceğini görür.
+   */
+  fieldErrors?: Record<string, string>
 }
 
-const MAX_BIRTH_DATE = new Date().toISOString().slice(0, 10)
 const GENDERS: Gender[] = ['girl', 'boy', 'unspecified']
 
 export function ChildForm({
@@ -43,11 +49,23 @@ export function ChildForm({
   submitLabel,
   busy = false,
   error = '',
+  fieldErrors = {},
 }: ChildFormProps) {
   const { taxonomy } = useAppData()
   const [touched, setTouched] = useState(false)
-  const nameError = touched && !value.name.trim() ? 'Çocuğun adını girin.' : undefined
-  const dateError = touched && !value.birthDate ? 'Doğum tarihini girin.' : undefined
+
+  // Sınırlar her render'da hesaplanıyor: modül yüklenirken bir kez
+  // hesaplansaydı, sayfa gece yarısını geçerse "bugün" dünde kalırdı.
+  const maxBirthDate = todayISO()
+  const minBirthDate = earliestBirthDate()
+
+  const localNameError = validateText(value.name, LIMITS.childName, 'Çocuğun adı')
+  const localDateError = validateBirthDate(value.birthDate)
+
+  // Kullanıcı gönderene kadar hata gösterme; gönderdikten sonra hem kendi
+  // kontrollerimizi hem sunucudan geleni göster.
+  const nameError = fieldErrors.name ?? (touched ? localNameError : undefined)
+  const dateError = fieldErrors.birthDate ?? (touched ? localDateError : undefined)
 
   // Güncellemeler bir önceki duruma göre yapılır: aynı karede art arda gelen
   // değişiklikler (hızlı tıklama) birbirini ezmesin diye.
@@ -69,7 +87,10 @@ export function ChildForm({
       onSubmit={(event) => {
         event.preventDefault()
         setTouched(true)
-        if (!value.name.trim() || !value.birthDate) return
+        // Veritabanının reddedeceği veriyi hiç göndermiyoruz: eskiden
+        // gönderiliyor, ham Postgres hatası dönüyor ve kullanıcı neyin
+        // yanlış olduğunu anlamadan sihirbazda sıkışıyordu.
+        if (localNameError || localDateError) return
         onSubmit()
       }}
       noValidate
@@ -79,7 +100,7 @@ export function ChildForm({
       <TextField
         label="Çocuğun adı *"
         required
-        maxLength={40}
+        maxLength={LIMITS.childName.max}
         value={value.name}
         error={nameError}
         onChange={(event) => patch({ name: event.target.value })}
@@ -90,8 +111,8 @@ export function ChildForm({
         label="Doğum tarihi *"
         type="date"
         required
-        max={MAX_BIRTH_DATE}
-        min="2005-01-01"
+        max={maxBirthDate}
+        min={minBirthDate}
         value={value.birthDate}
         error={dateError}
         hint="Yaşa uygun kitapları göstermek için kullanılır."

@@ -8,7 +8,9 @@ import { FormMessage, SelectField, TextField } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/Toast'
 import { cn } from '@/lib/cn'
 import { isValidTurkishPhone, toWhatsAppNumber } from '@/lib/phone'
+import { toFriendlyMessage } from '@/lib/errors'
 import { createClient } from '@/lib/supabase/client'
+import { LIMITS, validateText } from '@/lib/validation'
 import { ageLabel, BOOK_CONDITION_LABELS } from '@/lib/labels'
 
 const CONDITIONS = ['new', 'good', 'worn'] as const
@@ -200,8 +202,15 @@ function ExchangeForm({ onCreated }: { onCreated: () => void }) {
     event.preventDefault()
     setError('')
 
-    if (!values.title.trim() || !values.contactName.trim() || !values.city.trim()) {
-      setError('Kitap adı, adınız ve şehir zorunlu.')
+    const lengthError =
+      validateText(values.title, LIMITS.exchangeTitle, 'Kitap adı') ??
+      validateText(values.contactName, LIMITS.exchangeContactName, 'Adınız') ??
+      validateText(values.city, { min: 1, max: 80 }, 'Şehir') ??
+      (values.offer.trim()
+        ? validateText(values.offer, { min: 0, max: LIMITS.exchangeOffer.max }, 'Takas notu')
+        : undefined)
+    if (lengthError) {
+      setError(lengthError)
       return
     }
     if (!isValidTurkishPhone(values.phone)) {
@@ -230,7 +239,7 @@ function ExchangeForm({ onCreated }: { onCreated: () => void }) {
     setBusy(false)
 
     if (insertError) {
-      setError('İlan kaydedilemedi. Tekrar deneyin.')
+      setError(toFriendlyMessage(insertError, 'İlan kaydedilemedi. Tekrar deneyin.'))
       return
     }
     toast.show('İlanınız yayınlandı.')

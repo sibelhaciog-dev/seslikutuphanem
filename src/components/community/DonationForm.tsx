@@ -6,7 +6,9 @@ import { Button, ButtonLink } from '@/components/ui/Button'
 import { FormMessage, TextAreaField, TextField } from '@/components/ui/Field'
 import { cn } from '@/lib/cn'
 import { isValidTurkishPhone } from '@/lib/phone'
+import { toFriendlyMessage } from '@/lib/errors'
 import { createClient } from '@/lib/supabase/client'
+import { LIMITS, validateText } from '@/lib/validation'
 
 interface Organization {
   id: string
@@ -40,8 +42,12 @@ export function DonationForm({ organizations }: { organizations: Organization[] 
       setError('Lütfen bir kurum seçin.')
       return
     }
-    if (!values.fullName.trim() || !values.city.trim() || !values.address.trim()) {
-      setError('Ad, şehir ve adres zorunlu.')
+    const lengthError =
+      validateText(values.fullName, LIMITS.donationFullName, 'Ad soyad') ??
+      validateText(values.city, { min: 1, max: 80 }, 'Şehir') ??
+      validateText(values.address, LIMITS.donationAddress, 'Adres')
+    if (lengthError) {
+      setError(lengthError)
       return
     }
     if (!isValidTurkishPhone(values.phone)) {
@@ -68,7 +74,7 @@ export function DonationForm({ organizations }: { organizations: Organization[] 
     setBusy(false)
 
     if (insertError) {
-      setError('Talep kaydedilemedi. Tekrar deneyin.')
+      setError(toFriendlyMessage(insertError, 'Talep kaydedilemedi. Tekrar deneyin.'))
       return
     }
     setDone(true)

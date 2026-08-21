@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { Button } from '@/components/ui/Button'
 import { FormMessage } from '@/components/ui/Field'
+import { toFriendlyMessage } from '@/lib/errors'
 import { createClient } from '@/lib/supabase/client'
 
 export function VerifyNotice() {
@@ -27,7 +28,7 @@ export function VerifyNotice() {
     if (!email) return
     const { error: resendError } = await createClient().auth.resend({ type: 'signup', email })
     if (resendError) {
-      setError(resendError.message)
+      setError(toFriendlyMessage(resendError, 'E-posta gönderilemedi. Tekrar deneyin.'))
       return
     }
     setError('')

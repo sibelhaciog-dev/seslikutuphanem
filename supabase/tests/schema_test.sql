@@ -486,4 +486,47 @@ delete from auth.users where id in ('a0000000-0000-0000-0000-0000000000aa',
 delete from public.pending_role_grants
 where email in ('yeni-yonetici@example.com', 'KaRiSiK@Example.COM', 'sirada-yok@example.com');
 
+-- ═══ 11. Çocuk doğum tarihi kısıtı (0016) ═════════════════════════════════
+-- Kısıt yalnızca "gelecekte doğulamaz" der; 18 yaş kuralı formda (bkz. 0016).
+do $$ begin raise notice '── 11. Doğum tarihi kısıtı ──'; end $$;
+
+insert into auth.users (id, email) values
+  ('a0000000-0000-0000-0000-0000000000d1', 'tarih@ornek.com');
+
+-- Makul tarih kabul edilmeli.
+insert into public.children (owner_id, name, birth_date)
+values ('a0000000-0000-0000-0000-0000000000d1', 'Normal', current_date - 2000);
+select pg_temp.assert_eq(
+  (select count(*)::int from public.children
+   where owner_id = 'a0000000-0000-0000-0000-0000000000d1'), 1, 'makul doğum tarihi kabul edildi');
+
+-- 2000 öncesi ARTIK kabul edilmeli (eski kısıt bunu reddediyordu).
+insert into public.children (owner_id, name, birth_date)
+values ('a0000000-0000-0000-0000-0000000000d1', 'Eski', date '1995-05-10');
+select pg_temp.assert_eq(
+  (select count(*)::int from public.children
+   where owner_id = 'a0000000-0000-0000-0000-0000000000d1' and name = 'Eski'),
+  1, '2000 öncesi tarih artık veritabanında serbest');
+
+-- Boş tarih serbest (sütun nullable).
+insert into public.children (owner_id, name, birth_date)
+values ('a0000000-0000-0000-0000-0000000000d1', 'Tarihsiz', null);
+select pg_temp.assert_eq(
+  (select count(*)::int from public.children
+   where owner_id = 'a0000000-0000-0000-0000-0000000000d1' and birth_date is null),
+  1, 'doğum tarihi boş bırakılabilir');
+
+-- İleri tarih hâlâ reddedilmeli.
+do $$
+begin
+  insert into public.children (owner_id, name, birth_date)
+  values ('a0000000-0000-0000-0000-0000000000d1', 'Gelecek', current_date + 1);
+  raise exception 'BAŞARISIZ: ileri doğum tarihi kabul edildi';
+exception
+  when check_violation then
+    raise notice '  ✓ ileri doğum tarihi reddedildi';
+end $$;
+
+delete from auth.users where id = 'a0000000-0000-0000-0000-0000000000d1';
+
 do $$ begin raise notice ''; raise notice 'TÜM ŞEMA TESTLERİ GEÇTİ'; end $$;

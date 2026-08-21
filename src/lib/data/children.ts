@@ -28,10 +28,18 @@ async function resolveIds(
   slugs: string[],
 ): Promise<string[]> {
   if (slugs.length === 0) return []
-  const { data } = await supabase.from(table).select('id, slug').in('slug', slugs)
+  const { data, error } = await supabase.from(table).select('id, slug').in('slug', slugs)
+  if (error) throw error
   return (data ?? []).map((row) => row.id)
 }
 
+/**
+ * İlgi alanı ve öncelikli konu bağlarını baştan yazar.
+ *
+ * Hatalar YUTULMUYOR: eskiden dönen değerlere bakılmıyordu, dolayısıyla
+ * yazma başarısız olsa bile kullanıcı "Profil kaydedildi." görüyor ama
+ * seçtiği ilgi alanları kaybolmuş oluyordu.
+ */
 async function replaceRelations(
   supabase: Client,
   childId: string,
@@ -42,18 +50,30 @@ async function replaceRelations(
     resolveIds(supabase, 'development_topics', values.focusTopicSlugs),
   ])
 
-  await supabase.from('child_interests').delete().eq('child_id', childId)
+  const { error: interestDeleteError } = await supabase
+    .from('child_interests')
+    .delete()
+    .eq('child_id', childId)
+  if (interestDeleteError) throw interestDeleteError
+
   if (interestIds.length > 0) {
-    await supabase
+    const { error: interestInsertError } = await supabase
       .from('child_interests')
       .insert(interestIds.map((interestId) => ({ child_id: childId, interest_id: interestId })))
+    if (interestInsertError) throw interestInsertError
   }
 
-  await supabase.from('child_focus_topics').delete().eq('child_id', childId)
+  const { error: topicDeleteError } = await supabase
+    .from('child_focus_topics')
+    .delete()
+    .eq('child_id', childId)
+  if (topicDeleteError) throw topicDeleteError
+
   if (topicIds.length > 0) {
-    await supabase
+    const { error: topicInsertError } = await supabase
       .from('child_focus_topics')
       .insert(topicIds.map((topicId) => ({ child_id: childId, topic_id: topicId })))
+    if (topicInsertError) throw topicInsertError
   }
 }
 
@@ -122,8 +142,9 @@ export async function archiveChild(supabase: Client, childId: string): Promise<v
 }
 
 export async function completeOnboarding(supabase: Client, userId: string): Promise<void> {
-  await supabase
+  const { error } = await supabase
     .from('profiles')
     .update({ onboarding_completed_at: new Date().toISOString() })
     .eq('id', userId)
+  if (error) throw error
 }

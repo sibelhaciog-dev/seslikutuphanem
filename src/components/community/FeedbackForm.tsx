@@ -4,7 +4,9 @@ import { useState, type FormEvent } from 'react'
 import { useAppData } from '@/components/providers/AppDataProvider'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { FormMessage, SelectField, TextAreaField } from '@/components/ui/Field'
+import { toFriendlyMessage } from '@/lib/errors'
 import { createClient } from '@/lib/supabase/client'
+import { LIMITS, validateText } from '@/lib/validation'
 
 const TOPICS = [
   { value: 'feature', label: '💡 Özellik önerisi' },
@@ -25,8 +27,13 @@ export function FeedbackForm() {
     event.preventDefault()
     setError('')
 
-    if (!topic || !message.trim()) {
-      setError('Lütfen konu ve mesaj alanlarını doldurun.')
+    if (!topic) {
+      setError('Lütfen bir konu seçin.')
+      return
+    }
+    const messageError = validateText(message, LIMITS.feedbackMessage, 'Mesaj')
+    if (messageError) {
+      setError(messageError)
       return
     }
     if (!userId) {
@@ -45,7 +52,7 @@ export function FeedbackForm() {
     setBusy(false)
 
     if (insertError) {
-      setError('Gönderilemedi. Tekrar deneyin.')
+      setError(toFriendlyMessage(insertError, 'Gönderilemedi. Tekrar deneyin.'))
       return
     }
     setDone(true)

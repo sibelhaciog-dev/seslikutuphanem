@@ -4,21 +4,24 @@ import { useState, type FormEvent } from 'react'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { Button } from '@/components/ui/Button'
 import { FormMessage, TextField } from '@/components/ui/Field'
+import { toFriendlyError } from '@/lib/errors'
 import { createClient } from '@/lib/supabase/client'
-
-const MIN_PASSWORD_LENGTH = 8
+import { LIMITS, validatePassword } from '@/lib/validation'
 
 export function ResetPasswordForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [fieldError, setFieldError] = useState('')
   const [busy, setBusy] = useState(false)
 
   async function submit(event: FormEvent) {
     event.preventDefault()
     setError('')
+    setFieldError('')
 
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Şifre en az ${MIN_PASSWORD_LENGTH} karakter olmalı.`)
+    const passwordError = validatePassword(password)
+    if (passwordError) {
+      setFieldError(passwordError)
       return
     }
 
@@ -27,7 +30,9 @@ export function ResetPasswordForm() {
     setBusy(false)
 
     if (updateError) {
-      setError(updateError.message)
+      const friendly = toFriendlyError(updateError, 'Şifre güncellenemedi. Tekrar deneyin.')
+      if (friendly.field === 'password') setFieldError(friendly.message)
+      else setError(friendly.message)
       return
     }
     window.location.assign('/')
@@ -42,10 +47,11 @@ export function ResetPasswordForm() {
           type="password"
           autoComplete="new-password"
           required
-          minLength={MIN_PASSWORD_LENGTH}
+          minLength={LIMITS.password.min}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          hint={`En az ${MIN_PASSWORD_LENGTH} karakter`}
+          error={fieldError}
+          hint={`En az ${LIMITS.password.min} karakter`}
         />
         <Button type="submit" size="lg" disabled={busy} className="w-full">
           {busy ? 'Kaydediliyor…' : 'Şifreyi güncelle'}

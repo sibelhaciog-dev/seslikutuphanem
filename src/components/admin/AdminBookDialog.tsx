@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/Button'
 import { Dialog } from '@/components/ui/Dialog'
 import { FormMessage, SelectField, TextAreaField, TextField } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/Toast'
+import { toFriendlyMessage } from '@/lib/errors'
 import { createClient } from '@/lib/supabase/client'
+import { LIMITS, validateNumber, validateText } from '@/lib/validation'
 
 /** Editörün kitap kaydını düzenlemesi. Yazma yetkisi RLS ile korunuyor. */
 export function AdminBookDialog({
@@ -35,12 +37,25 @@ export function AdminBookDialog({
   }
 
   async function save() {
-    if (!values.title.trim()) {
-      setError('Başlık boş olamaz.')
+    const titleError = validateText(values.title, LIMITS.bookTitle, 'Başlık')
+    if (titleError) {
+      setError(titleError)
       return
     }
+
     const ageMin = values.ageMin === '' ? null : Number(values.ageMin)
     const ageMax = values.ageMax === '' ? null : Number(values.ageMax)
+
+    // Alandaki `min`/`max` yalnızca oklara etki ediyor; elle yazılan değer
+    // geçiyordu ve veritabanı `books_age_max_check` ile ham hata döndürüyordu.
+    const ageError =
+      validateNumber(ageMin, LIMITS.bookAge, 'En küçük yaş') ??
+      validateNumber(ageMax, LIMITS.bookAge, 'En büyük yaş')
+    if (ageError) {
+      setError(ageError)
+      return
+    }
+
     if (ageMin !== null && ageMax !== null && ageMin > ageMax) {
       setError('Yaş aralığı ters girilmiş.')
       return
@@ -61,7 +76,7 @@ export function AdminBookDialog({
     setBusy(false)
 
     if (updateError) {
-      setError(updateError.message)
+      setError(toFriendlyMessage(updateError, 'Kitap güncellenemedi. Tekrar deneyin.'))
       return
     }
     toast.show('Kitap güncellendi.')
