@@ -25,16 +25,28 @@ export function BookDetail({ book, catalog }: { book: BookDetailType; catalog: C
     useAppData()
   const toast = useToast()
   const [recommendations, setRecommendations] = useState<Recommendation[] | null>(null)
+  const [pending, setPending] = useState(false)
 
   const item = library[book.id]
   const age = ageLabel(book.ageMin, book.ageMax)
 
+  /**
+   * İstek sürerken ikinci bir istek başlatmaz.
+   *
+   * Hızlı üç tıklama üç ayrı okuma oturumu kaydediyordu ve türetilen
+   * "kaç kez okundu" sayacı yarış durumuna girip yanlış değerde kalıyordu
+   * (bkz. 0017). Kullanıcı açısından da bir tıklama bir okuma demek.
+   */
   async function safely(action: () => Promise<void>, successMessage?: string) {
+    if (pending) return
+    setPending(true)
     try {
       await action()
       if (successMessage) toast.show(successMessage)
     } catch {
       toast.show('Kaydedilemedi, bağlantını kontrol et.', 'error')
+    } finally {
+      setPending(false)
     }
   }
 
@@ -154,6 +166,7 @@ export function BookDetail({ book, catalog }: { book: BookDetailType; catalog: C
               />
               <Button
                 variant="secondary"
+                disabled={pending}
                 aria-pressed={item?.isFavorite ?? false}
                 onClick={() => void safely(() => toggleFavorite(book.id))}
                 className={cn(item?.isFavorite && 'border-[#ff3b30] bg-danger-soft')}
@@ -161,11 +174,12 @@ export function BookDetail({ book, catalog }: { book: BookDetailType; catalog: C
                 {item?.isFavorite ? '❤️ Favorilerde' : '🤍 Favorilere ekle'}
               </Button>
               <Button
+                disabled={pending}
                 onClick={() =>
                   void safely(() => logSession(book.id), 'Okuma kaydedildi. Tekrar okumak sayılır!')
                 }
               >
-                + Bugün okuduk
+                {pending ? 'Kaydediliyor…' : '+ Bugün okuduk'}
               </Button>
             </div>
 

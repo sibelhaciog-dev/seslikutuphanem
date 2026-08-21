@@ -529,4 +529,60 @@ end $$;
 
 delete from auth.users where id = 'a0000000-0000-0000-0000-0000000000d1';
 
+-- ═══ 12. Okuma sayacı tutarlılığı (0017) ══════════════════════════════════
+-- Tek işlemde art arda eklenen oturumlar için sayaç doğru olmalı.
+-- (Gerçek eşzamanlılık tek bağlantıdan test edilemez; kilidin varlığını
+--  ayrıca doğruluyoruz.)
+do $$ begin raise notice '── 12. Okuma sayacı ──'; end $$;
+
+insert into auth.users (id, email) values
+  ('a0000000-0000-0000-0000-0000000000e1', 'sayac@ornek.com');
+insert into public.children (id, owner_id, name)
+values ('a0000000-0000-0000-0000-0000000000e2',
+        'a0000000-0000-0000-0000-0000000000e1', 'Sayaç');
+
+insert into public.library_items (id, child_id, book_id, status)
+select 'a0000000-0000-0000-0000-0000000000e3',
+       'a0000000-0000-0000-0000-0000000000e2', id, 'to_read'
+from public.books limit 1;
+
+insert into public.reading_sessions (library_item_id, read_on) values
+  ('a0000000-0000-0000-0000-0000000000e3', current_date),
+  ('a0000000-0000-0000-0000-0000000000e3', current_date - 1),
+  ('a0000000-0000-0000-0000-0000000000e3', current_date - 2);
+
+select pg_temp.assert_eq(
+  (select times_read from public.library_items
+   where id = 'a0000000-0000-0000-0000-0000000000e3'),
+  3, 'üç oturum sonrası sayaç 3');
+
+select pg_temp.assert_eq(
+  (select count(*)::int from public.reading_sessions
+   where library_item_id = 'a0000000-0000-0000-0000-0000000000e3'),
+  3, 'oturum satırları da 3');
+
+-- Oturum silinince sayaç geri düşmeli.
+delete from public.reading_sessions
+where library_item_id = 'a0000000-0000-0000-0000-0000000000e3'
+  and read_on = current_date - 2;
+select pg_temp.assert_eq(
+  (select times_read from public.library_items
+   where id = 'a0000000-0000-0000-0000-0000000000e3'),
+  2, 'oturum silinince sayaç düştü');
+
+-- Oturum eklenince durum otomatik "okundu" olmalı.
+select pg_temp.assert(
+  (select status = 'read' from public.library_items
+   where id = 'a0000000-0000-0000-0000-0000000000e3'),
+  'oturum eklenince durum okundu oldu');
+
+-- Kilit gerçekten fonksiyonun içinde mi? (0017'nin özü bu.)
+select pg_temp.assert(
+  (select prosrc like '%for no key update%' from pg_proc
+   where proname = 'sync_library_item_reading_stats'
+     and pronamespace = 'public'::regnamespace),
+  'sayım öncesi for no key update kilidi alınıyor');
+
+delete from auth.users where id = 'a0000000-0000-0000-0000-0000000000e1';
+
 do $$ begin raise notice ''; raise notice 'TÜM ŞEMA TESTLERİ GEÇTİ'; end $$;

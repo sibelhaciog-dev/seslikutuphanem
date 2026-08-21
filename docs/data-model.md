@@ -62,6 +62,8 @@ erDiagram
 | `0013_function_hardening`  | `search_path` sabitleme + iç fonksiyonları REST yüzeyinden çıkarma                                                                           |
 | `0014_rls_performance`     | Politikalarda InitPlan optimizasyonu, `FOR ALL` ayrıştırma, FK indeksleri                                                                    |
 | `0015_pending_role_grants` | E-posta bazlı ön yetki listesi; kayıt olunca rol otomatik verilir                                                                            |
+| `0016_child_birth_date`    | Doğum tarihi kısıtı gevşetildi; 18 yaş kuralı forma taşındı                                                                                  |
+| `0017_reading_stats_lock`  | Okuma sayacı yarış durumu: sayım öncesi `for no key update`                                                                                  |
 
 Sıralı çalıştırılır; hiçbiri kendinden sonrakine atıfta bulunmaz.
 
