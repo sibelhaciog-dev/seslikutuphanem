@@ -65,6 +65,7 @@ erDiagram
 | `0016_child_birth_date`    | Doğum tarihi kısıtı gevşetildi; 18 yaş kuralı forma taşındı                                                                                  |
 | `0017_reading_stats_lock`  | Okuma sayacı yarış durumu: sayım öncesi `for no key update`                                                                                  |
 | `0018_platform_stats`      | Yönetim panosu sayıları; satır sızdırmadan toplam verir                                                                                      |
+| `0019_ai_recommendations`  | Yapay zekâ öneri geçmişi (ADR 0007); niyet metni + sonuçlar                                                                                  |
 
 Sıralı çalıştırılır; hiçbiri kendinden sonrakine atıfta bulunmaz.
 

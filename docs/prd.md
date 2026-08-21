@@ -105,9 +105,11 @@ kişiselleştirilebilir bir rehbere dönüştürür; üstüne okuma takibi ekler
    yalnızca ebeveynin kendisine görünür. Varsayılan her zaman gizli.
 3. **Türkçe, sade dil.** Arayüzde teknik terim yok.
 4. **Boş durum yoktur.** Her ekran, kullanıcının bir sonraki adımını söyler.
-5. **Yapay zekâ yardımcıdır, karar verici değildir.** Öneri sıralamasını
-   deterministik motor yapar; yapay zekâ yalnızca açıklama yazar ve kapak
-   tanır. Servis kapalıysa ürün çalışmaya devam eder.
+5. **Yapay zekâ seçer, üretmez.** Aday havuzunu deterministik motor
+   hazırlar (yaş süzgeci dahil); yapay zekâ bu adaylar arasından seçer,
+   sıralar ve gerekçe yazar. Katalog dışına çıkamaz, yaş dışı öneremez.
+   Servis kapalıysa deterministik sıralama gösterilir ve ürün çalışmaya
+   devam eder. Ayrıntı: [ADR 0007](decisions/0007-yapay-zeka-onerisi.md)
 
 ## 6. Ana akışlar
 
@@ -127,7 +129,16 @@ kişiselleştirilebilir bir rehbere dönüştürür; üstüne okuma takibi ekler
 3. Aynı kitap tekrar okunursa "Tekrar okuduk" → yeni oturum kaydı.
 4. Not eklenir (varsayılan: özel).
 
-### 6.3 Kapak tarama
+### 6.3 Keşif (yapay zekâ destekli öneri)
+
+1. Ana sayfadaki keşif çerçevesi: mod çipleri + kısa mesaj kutusu.
+2. "Öner" → deterministik aday havuzu → yapay zekâ seçer ve gerekçelendirir.
+3. "Daha detaylı ara →" `/kesif` sayfasını açar: tam form, sonuç ve geçmiş.
+4. Geçmiş çalıştırmalar saklanır; ebeveyn eski sonuçlarına dönebilir.
+5. Çocuk profili yoksa da çalışır; arayüz profille daha isabetli olacağını
+   söyler.
+
+### 6.4 Kapak tarama
 
 1. Kütüphanem → "Kapak tara" → fotoğraf.
 2. Sunucu tarafında görsel modeli kitabı tanır.

@@ -50,6 +50,60 @@ export interface Database {
         }
         Relationships: []
       }
+      ai_recommendations: {
+        Row: {
+          id: string
+          user_id: string
+          child_id: string | null
+          mode: string | null
+          prompt: string | null
+          results: Json
+          source: 'ai' | 'deterministic'
+          model: string | null
+          total_tokens: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          child_id?: string | null
+          mode?: string | null
+          prompt?: string | null
+          results: Json
+          source?: 'ai' | 'deterministic'
+          model?: string | null
+          total_tokens?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          child_id?: string | null
+          mode?: string | null
+          prompt?: string | null
+          results?: Json
+          source?: 'ai' | 'deterministic'
+          model?: string | null
+          total_tokens?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'ai_recommendations_child_id_fkey'
+            columns: ['child_id']
+            isOneToOne: false
+            referencedRelation: 'children'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'ai_recommendations_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       ai_usage_events: {
         Row: {
           id: string
@@ -1330,6 +1384,7 @@ export interface Database {
       }
     }
     Enums: {
+      ai_result_source: 'ai' | 'deterministic'
       app_role: 'member' | 'editor' | 'admin'
       book_condition: 'new' | 'good' | 'worn'
       book_origin: 'catalog' | 'camera' | 'manual'

@@ -638,4 +638,77 @@ reset role;
 delete from auth.users where id in ('a0000000-0000-0000-0000-0000000000f1',
                                     'a0000000-0000-0000-0000-0000000000f2');
 
+-- ═══ 14. Yapay zekâ öneri geçmişi (0019) ══════════════════════════════════
+-- Niyet metni ebeveynin özel bilgisi; kimse başkasınınkini görmemeli.
+do $$ begin raise notice '── 14. Öneri geçmişi ──'; end $$;
+
+reset role;
+insert into auth.users (id, email) values
+  ('a0000000-0000-0000-0000-0000000000c1', 'oneri1@ornek.com'),
+  ('a0000000-0000-0000-0000-0000000000c2', 'oneri2@ornek.com');
+insert into public.children (id, owner_id, name)
+values ('a0000000-0000-0000-0000-0000000000c3',
+        'a0000000-0000-0000-0000-0000000000c1', 'Öneri Çocuk');
+
+set role authenticated;
+select pg_temp.login_as('a0000000-0000-0000-0000-0000000000c1');
+
+insert into public.ai_recommendations (user_id, child_id, mode, prompt, results, source)
+values ('a0000000-0000-0000-0000-0000000000c1', 'a0000000-0000-0000-0000-0000000000c3',
+        'sakin', 'kardeşi olacak', '[{"bookId":"x","reason":"y"}]'::jsonb, 'ai');
+
+select pg_temp.assert_eq(
+  (select count(*)::int from public.ai_recommendations), 1, 'kendi geçmişini görüyor');
+
+-- Profil olmadan da kayıt açılabilmeli (ADR 0007: çocuk zorunlu değil).
+insert into public.ai_recommendations (user_id, mode, results)
+values ('a0000000-0000-0000-0000-0000000000c1', 'eglence', '[]'::jsonb);
+select pg_temp.assert_eq(
+  (select count(*)::int from public.ai_recommendations where child_id is null),
+  1, 'çocuk profili olmadan da kayıt açılıyor');
+
+-- Başkasının adına kayıt açılamamalı.
+do $$
+begin
+  insert into public.ai_recommendations (user_id, results)
+  values ('a0000000-0000-0000-0000-0000000000c2', '[]'::jsonb);
+  raise exception 'BAŞARISIZ: başkası adına öneri kaydı açıldı';
+exception
+  when insufficient_privilege then
+    raise notice '  ✓ başkası adına kayıt açılamıyor';
+end $$;
+
+-- İkinci kullanıcı ilkinin geçmişini görmemeli.
+select pg_temp.login_as('a0000000-0000-0000-0000-0000000000c2');
+select pg_temp.assert_eq(
+  (select count(*)::int from public.ai_recommendations), 0,
+  'başkasının öneri geçmişi görünmüyor');
+
+-- `results` dizi olmak zorunda.
+select pg_temp.login_as('a0000000-0000-0000-0000-0000000000c1');
+do $$
+begin
+  insert into public.ai_recommendations (user_id, results)
+  values ('a0000000-0000-0000-0000-0000000000c1', '{"a":1}'::jsonb);
+  raise exception 'BAŞARISIZ: dizi olmayan results kabul edildi';
+exception
+  when check_violation then
+    raise notice '  ✓ results dizi olmak zorunda';
+end $$;
+
+-- Çocuk silinince geçmiş kaybolmamalı (on delete set null).
+reset role;
+delete from public.children where id = 'a0000000-0000-0000-0000-0000000000c3';
+select pg_temp.assert_eq(
+  (select count(*)::int from public.ai_recommendations
+   where user_id = 'a0000000-0000-0000-0000-0000000000c1'),
+  2, 'çocuk silinince geçmiş korunuyor');
+
+select pg_temp.assert(
+  not has_table_privilege('anon', 'public.ai_recommendations', 'select'),
+  'anon öneri geçmişine erişemiyor');
+
+delete from auth.users where id in ('a0000000-0000-0000-0000-0000000000c1',
+                                    'a0000000-0000-0000-0000-0000000000c2');
+
 do $$ begin raise notice ''; raise notice 'TÜM ŞEMA TESTLERİ GEÇTİ'; end $$;
